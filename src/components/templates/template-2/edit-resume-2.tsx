@@ -38,7 +38,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
 
-import type { ResumeData, Section, Link } from "./data.ts";
+import type { ResumeData, Section, Link } from "./data";
 
 // Add these props to the EditResume component
 interface EditResumeProps {

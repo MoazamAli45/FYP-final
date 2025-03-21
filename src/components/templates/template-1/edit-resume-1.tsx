@@ -44,7 +44,7 @@ import type {
   Section,
   Link,
   CustomSectionItem,
-} from "./data.ts";
+} from "./data";
 
 // Validation constants
 const MAX_POINTS = 5;
