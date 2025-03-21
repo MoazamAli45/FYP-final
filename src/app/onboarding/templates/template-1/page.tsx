@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,22 @@ import EditResume from "@/components/templates/template-1/edit-resume-1";
 import { initialData } from "@/components/templates/template-1/data";
 import EditLayout from "@/components/templates/edit-layout";
 
-export default function Template1Page() {
+export default function Template1Wrapper() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full h-[60vh] flex items-center justify-center">
+          <Loader2Icon className="h-6 w-6 animate-spin" />
+          <span> Loading template...</span>
+        </div>
+      }
+    >
+      <Template1Page />
+    </Suspense>
+  );
+}
+
+function Template1Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const resumeId = searchParams.get("resumeId");
