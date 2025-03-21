@@ -1,0 +1,127 @@
+import { cn } from "@/lib/utils";
+import Image from "next/image";
+import React from "react";
+import CheckFeature from "../../../../public/assets/svg/check-feature";
+import { Button } from "@/components/ui/button";
+
+const getPlanLink = (planName: any, price: any) => {
+  let planUrl = "#";
+
+  if(planName === "Standard") {
+    if( price === "$7/month" ){
+      planUrl = "https://buy.stripe.com/test_4gw5mS2lZ64H4MMfYZ"
+    }
+    else{
+      planUrl = "https://buy.stripe.com/test_9AQ02y9Or3Wz6UU4gj"
+    }
+  }
+  else if(planName === "Pro"){
+    if( price === "$12/month" ){
+      planUrl = "https://buy.stripe.com/test_00gaHc6Cf1Orgvu002"
+    }
+    else{
+      planUrl = "https://buy.stripe.com/test_00g3eK7Gj78Lcfe8wA"
+    }
+  }
+
+  return planUrl;
+};
+
+const PlanCard = ({
+  price,
+  features,
+  className,
+  standard = false,
+  planName,
+  Icon,
+  onClickButton,
+  key,
+}: PlanCardProps) => {
+  return (
+    <div
+      className={cn(
+        "rounded-[16px] max-w-full w-full 2sxl:max-w-[350px] 2sxl:w-[335px]  border-[1px]  border-solid border-[#EAECF0] bg-white p-[24px] shadow-plan-card hover:scale-105 cursor-pointer transition-transform duration-300 ease-in-out ",
+        {
+          "bg-primary text-white relative": standard,
+        },
+        className
+      )}
+    >
+      {standard && (
+        <div>
+          <span className="absolute -top-[35px] -right-3  md:-right-[40px] text-[#5BBAF3]  text-[14px] font-medium">
+            Most Popular
+          </span>
+          <Image
+            src="/assets/dashboard/arrow-standard.svg"
+            alt="Most Popular"
+            width={61}
+            height={30}
+            className="absolute -top-[15px] md:-top-[25px] right-3 md:right-[40px]"
+          />
+        </div>
+      )}
+      <div className="flex flex-col justify-between">
+        <div className="flex flex-col gap-5 grow">
+          <Image src={Icon} alt={planName || "Icon"} width={56} height={56} />
+          <span
+            className={cn("text-[18px] font-medium text-primary", {
+              "text-white": standard,
+            })}
+          >
+            {planName}
+          </span>
+          {/*  PRICE */}
+          <h3
+            className={cn("text-[32px] font-bold text-text-primary", {
+              "text-white": standard,
+            })}
+          >
+            {price}
+          </h3>
+          {/*  features */}
+          {
+            <div className="flex flex-col gap-2 min-h-[250px] ">
+              {features.map((feature, index) => (
+                <div key={index} className="flex gap-2">
+                  <CheckFeature color={standard ? "white" : "#356CB5"} />
+                  <span
+                    className={cn(
+                      "text-[16px] font-normal text-text-quaternary",
+                      {
+                        "text-white": standard,
+                      }
+                    )}
+                  >
+                    {feature}
+                  </span>
+                </div>
+              ))}
+            </div>
+          }
+        </div>
+        {/*  Button */}
+        
+        <a href = {getPlanLink(planName, price)}
+          /*target="_blank" rel="noopener noreferrer"*/>
+          <Button
+            className={cn(
+              "bg-primary rounded-[8px] mt-auto py-[12px] shadow-plan-button text-sm font-bold px-[20px] flex items-center border-[1px] border-solid border-primary",
+              {
+                "text-primary": standard,
+                "text-white": !standard,
+                "bg-white border-[1px] border-solid border-white hover:bg-white/80 hover:text-primary/80":
+                  standard,
+              }
+            )}
+            //onClick={onClickButton}
+          >
+            Get Started
+          </Button>
+        </a>
+      </div>
+    </div>
+  );
+};
+
+export default PlanCard;
