@@ -5,7 +5,20 @@ import useAuthUser from "@/hooks/use-auth-user";
 import { useSearchParams } from "next/navigation";
 import React from "react";
 
-const Page = () => {
+
+
+
+export default const UploadResumeWrapper=()=>{
+
+  return <Suspense fallback={
+
+  }>
+
+<UploadPage/>
+    </Suspense>
+}
+
+const UploadPage = () => {
   const user = useAuthUser();
   const searchParams = useSearchParams();
 
@@ -14,4 +27,4 @@ const Page = () => {
   return type === "upload" ? <UploadResume user={user} /> : <Decide />;
 };
 
-export default Page;
+
