@@ -7,20 +7,18 @@ import { Button } from "@/components/ui/button";
 const getPlanLink = (planName: any, price: any) => {
   let planUrl = "#";
 
-  if(planName === "Standard") {
-    if( price === "$7/month" ){
-      planUrl = "https://buy.stripe.com/test_4gw5mS2lZ64H4MMfYZ"
+  if (planName === "Standard") {
+    if (price === "$7/month") {
+      //  MY STANDARD
+      planUrl = "https://buy.stripe.com/test_7sIg2H3o12iU78AeUU";
+    } else {
+      planUrl = "https://buy.stripe.com/test_9AQ02y9Or3Wz6UU4gj";
     }
-    else{
-      planUrl = "https://buy.stripe.com/test_9AQ02y9Or3Wz6UU4gj"
-    }
-  }
-  else if(planName === "Pro"){
-    if( price === "$12/month" ){
-      planUrl = "https://buy.stripe.com/test_00gaHc6Cf1Orgvu002"
-    }
-    else{
-      planUrl = "https://buy.stripe.com/test_00g3eK7Gj78Lcfe8wA"
+  } else if (planName === "Pro") {
+    if (price === "$12/month") {
+      planUrl = "https://buy.stripe.com/test_00gaHc6Cf1Orgvu002";
+    } else {
+      planUrl = "https://buy.stripe.com/test_00g3eK7Gj78Lcfe8wA";
     }
   }
 
@@ -101,9 +99,11 @@ const PlanCard = ({
           }
         </div>
         {/*  Button */}
-        
-        <a href = {getPlanLink(planName, price)}
-          /*target="_blank" rel="noopener noreferrer"*/>
+
+        <a
+          href={getPlanLink(planName, price)}
+          /*target="_blank" rel="noopener noreferrer"*/
+        >
           <Button
             className={cn(
               "bg-primary rounded-[8px] mt-auto py-[12px] shadow-plan-button text-sm font-bold px-[20px] flex items-center border-[1px] border-solid border-primary",

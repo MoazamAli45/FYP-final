@@ -1,19 +1,30 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, Loader2, Loader2Icon, Play } from "lucide-react";
+import {
+  Save,
+  Loader2,
+  Loader2Icon,
+  Play,
+  Download,
+  Share2,
+  ArrowLeft,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import useAuthUser from "@/hooks/use-auth-user";
 import EditResume from "@/components/templates/template-3/edit-resume-3";
 import { initialData } from "@/components/templates/template-3/data";
 import EditLayout from "@/components/templates/edit-layout";
+import PreviewResume3 from "@/components/templates/template-3/preview-resume-3";
+import { useReactToPrint } from "react-to-print";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function Template2Wrapper() {
+export default function Template3Wrapper() {
   return (
     <Suspense
       fallback={
@@ -41,6 +52,15 @@ function ResumePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
   const user = useAuthUser();
+
+  // resume preview state and download function
+  const [showPreview, setShowPreview] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const reactToPrintFn = useReactToPrint({
+    contentRef,
+    documentTitle: resumeTitle || "Resume",
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -136,7 +156,6 @@ function ResumePage() {
             setResumeTitle(resume.title || "My Professional Resume");
             if (resume.data) {
               setResumeData(resume.data);
-              toast.info("Loaded existing resume");
             }
           }
         } catch (error) {
@@ -152,7 +171,11 @@ function ResumePage() {
   }, [resumeId]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className={`${
+        showPreview == true ? `h-screen overflow-hidden` : `min-h-screen`
+      } bg-gray-50 relative`}
+    >
       <EditLayout />
       <div className="flex items-center justify-between px-2 gap-2 w-full max-w-[850px] mx-auto sm:px-4 pt-6">
         <Label htmlFor="resume-title" className="sr-only">
@@ -180,7 +203,7 @@ function ResumePage() {
             ) : (
               <>
                 <Save className="h-4 w-4" />
-                {resumeId ? "Update" : "Save"}
+                {resumeId ? "Update title" : "Save title"}
               </>
             )}
           </Button>
@@ -188,13 +211,82 @@ function ResumePage() {
             className="bg-primary text-white h-[50] flex items-center justify-center"
             asChild
           >
-            <Link href={"/"} className="flex items-center gap-1">
+            <Button
+              onClick={() => setShowPreview(true)}
+              className="flex items-center gap-1"
+            >
               <Play className="w-4 h-4 text-white" />
               <span className="text-white font-normal">Preview</span>
-            </Link>
+            </Button>
           </Button>
         </div>
       </div>
+      <AnimatePresence>
+        {showPreview && (
+          <motion.div
+            className="flex flex-col gap-1 py-3 fixed inset-0 bg-black/60 z-50 overflow-auto"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.div
+              className="w-full mx-auto px-3 py-2"
+              initial={{ y: 20 }}
+              animate={{ y: 0 }}
+              transition={{
+                delay: 0.1,
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+              }}
+            >
+              <div className="flex items-center justify-between px-2 gap-2 w-full max-w-[850px] mx-auto sm:px-4 py-2 mb-3">
+                <Button
+                  className="flex items-center gap-2 uppercase"
+                  onClick={() => setShowPreview(false)}
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                  <span className="sm:block hidden">Back to Editor</span>
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    className="bg-[#E6ECF8] hover:bg-[#E6ECF8]/90 text-primary h-[50] flex items-center justify-center gap-1"
+                    onClick={() =>
+                      router.push("/onboarding/upload-resume?type=upload")
+                    }
+                  >
+                    <Share2 className="w-5 h-5 text-primary" />
+                    <span className="text-primary font-normal">
+                      Upload & Share
+                    </span>
+                  </Button>
+                  <Button
+                    className="bg-primary text-white h-[50] flex items-center justify-center gap-1"
+                    onClick={() => reactToPrintFn()}
+                  >
+                    <Download className="w-5 h-5 text-white" />
+                    <span className="text-white font-normal">Download</span>
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div
+              className="w-[95%] md:w-1/2 mx-auto"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                delay: 0.2,
+                type: "spring",
+                stiffness: 300,
+                damping: 25,
+              }}
+            >
+              <PreviewResume3 contentRef={contentRef} resumeData={resumeData} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main>
         {resumeData ? (
