@@ -6,7 +6,11 @@ import Link from "next/link";
 import { handleUpdateOnboarding } from "@/lib/cognitoActions";
 import { useRouter } from "next/navigation";
 
-const EditLayout = () => {
+const EditLayout = ({
+  showBackButton = true,
+}: {
+  showBackButton?: boolean;
+}) => {
   const router = useRouter();
 
   return (
@@ -35,24 +39,26 @@ const EditLayout = () => {
           />
         </div>
       </nav>
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 w-full  max-w-screen-xl mx-auto">
-        <Link
-          href="/onboarding/choose-template"
-          className="flex items-center gap-2 uppercase"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to Templates</span>
-        </Link>
-        <button
-          onClick={async () => {
-            await handleUpdateOnboarding();
-            router?.push("/overview");
-          }}
-          className="flex items-center gap-2 uppercase"
-        >
-          <span>Skip</span>
-        </button>
-      </div>
+      {showBackButton && (
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 w-full  max-w-screen-xl mx-auto">
+          <Link
+            href="/onboarding/choose-template"
+            className="flex items-center gap-2 uppercase"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back to Templates</span>
+          </Link>
+          <button
+            onClick={async () => {
+              await handleUpdateOnboarding();
+              router?.push("/overview");
+            }}
+            className="flex items-center gap-2 uppercase"
+          >
+            <span>Skip</span>
+          </button>
+        </div>
+      )}
     </>
   );
 };

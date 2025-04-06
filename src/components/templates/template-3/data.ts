@@ -120,8 +120,11 @@ export const initialData: ResumeData = {
     title: "Digital Marketing Manager | Growth Hacking | Data Analysis",
     photoUrl: "",
     links: {
-      email: { text: "help@enhancv.com", url: "help@enhancv.com" },
-      linkedin: { text: "linkedin.com", url: "linkedin.com" },
+      email: { text: "help@ellenhohnson.com", url: "help@ellenhohnson.com" },
+      linkedin: {
+        text: "https://linkedin.com/in/ellenjohnson",
+        url: "https://linkedin.com/in/ellenjohnson",
+      },
       location: {
         text: "San Francisco, California",
         url: "San Francisco, California",

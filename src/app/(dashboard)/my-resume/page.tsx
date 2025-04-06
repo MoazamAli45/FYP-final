@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import Header from "@/components/shared/header";
@@ -46,6 +47,7 @@ import { millisecondsToSeconds } from "@/lib/utils";
 import UpgradeModal from "@/components/shared/upgrade-plan-modal";
 import { downloadData } from "aws-amplify/storage";
 import HeatmapPreview from "@/components/dashboard/my-resumes/preview-heatmap";
+import BuiltResumeCard from "@/components/shared/built-resume-card";
 //    IN CONTANTS FILE
 const itemsPerPage = TOTAL_RESUME_CARD_PER_PAGE;
 
@@ -55,6 +57,8 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [status, setStatus] = useState<string>("All");
+
+  const [resumeType, setResumeType] = useState<string>("Uploaded");
 
   //   RESUMES
   const [resumes, setResumes] = useState<any[]>([]);
@@ -98,8 +102,8 @@ const Page = () => {
 
   //  DATE
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2024, 6, 20),
-    to: addDays(new Date(2024, 6, 20), 20),
+    from: addDays(new Date(), -365), // One year ago from today
+    to: new Date(), // Today's date
   });
 
   //  SHOW UPGRADE MODAL
@@ -238,6 +242,13 @@ const Page = () => {
       if (status === "Inactive") return !resume.active;
     })
     .filter((resume) => {
+      if (resumeType === "Uploaded") {
+        return resume.path && resume.path.trim() !== "";
+      } else if (resumeType === "Built") {
+        return resume.isBuilt === true;
+      }
+    })
+    .filter((resume) => {
       // Check if updatedAt falls within the date range
       const resumeDate = new Date(resume.updatedAt);
       const startDate = date?.from ?? new Date(); // Default to current date if no from date
@@ -245,6 +256,8 @@ const Page = () => {
 
       return resumeDate >= startDate && resumeDate <= endDate;
     });
+
+  console.log("FILTERED Resumes", filteredResumes);
 
   const totalPages = Math.ceil(filteredResumes.length / itemsPerPage);
 
@@ -259,6 +272,11 @@ const Page = () => {
   const handleStatusChange = (value: string) => {
     setStatus(value);
     setCurrentPage(1); // Reset to first page on status change
+  };
+
+  const handleResumeTypeChange = (value: string) => {
+    setResumeType(value);
+    setCurrentPage(1); // Reset to first page on resume type change
   };
 
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -339,6 +357,7 @@ const Page = () => {
         subtitle="See how resumes are performing and manage them"
         buttonText="Upload Resume"
         buttonIconPath="/assets/upload-2.svg"
+        showDevelop={true}
         onButtonClick={openModal}
       >
         <div className="flex flex-col sm:flex-row sm:flex-wrap  md:items-center sm:space-y-0 sm:space-x-3 py-3">
@@ -373,6 +392,25 @@ const Page = () => {
             onChange={handleSearchChange}
             className="bg-white w-full sm:max-w-[400px] pl-11"
           />
+        </div>
+        <div className="flex xsm:flex-row w-full flex-col space-y-4 xsm:space-y-0 xsm:space-x-2 sm:w-[60%] sm:max-w-[400px] ">
+          <Select value={resumeType} onValueChange={handleResumeTypeChange}>
+            <SelectTrigger className="">
+              <SelectValue placeholder="Uploaded or Built Resume" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Uploaded">
+                <div className="flex pl-2 space-x-3">
+                  <span>Uploaded Resumes</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="Built">
+                <div className="flex pl-2 space-x-3">
+                  <span>Built Resumes</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex xsm:flex-row w-full flex-col space-y-4 xsm:space-y-0 xsm:space-x-2 sm:w-[60%] sm:max-w-[400px] ">
@@ -437,25 +475,38 @@ const Page = () => {
           <NotFoundSearch />
         </div>
       ) : (
-        !isLoading && (
+        !isLoading &&
+        filteredResumes.length > 0 && (
           <div className="w-full flex flex-col  items-left">
             <div className="grid justify-items-center	justify-center gap-6 w-full grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 items-center max-w-[1920px]">
               {currentItems?.map((resume) => (
-                <ResumeCard
-                  key={resume.id}
-                  id={resume.id}
-                  title={resume.title}
-                  lastModified={resume.updatedAt}
-                  links={resume.links}
-                  isActive={resume.active}
-                  thumbnailPath={resume?.path}
-                  onEditClick={handleEditModal}
-                  onLinkClick={openLinkModal}
-                  refetchThumbnail={refetchThumbnailUrl}
-                  onPreviewClick={previewClickHandler}
-                  heatmap={resume?.thumbnail}
-                  onPreviewHeatmap={previewHeatmapModal}
-                />
+                <React.Fragment key={resume.id}>
+                  {resumeType === "Uploaded" ? (
+                    <ResumeCard
+                      id={resume.id}
+                      title={resume.title}
+                      lastModified={resume.updatedAt}
+                      links={resume.links}
+                      isActive={resume.active}
+                      thumbnailPath={resume?.path}
+                      onEditClick={handleEditModal}
+                      onLinkClick={openLinkModal}
+                      refetchThumbnail={refetchThumbnailUrl}
+                      onPreviewClick={previewClickHandler}
+                      heatmap={resume?.thumbnail}
+                      onPreviewHeatmap={previewHeatmapModal}
+                    />
+                  ) : (
+                    <BuiltResumeCard
+                      id={resume.id}
+                      title={resume.title}
+                      lastModified={resume.updatedAt}
+                      isActive={resume.active}
+                      templateType={resume.templateType}
+                      thumbnailPath={resume?.templateType}
+                    />
+                  )}
+                </React.Fragment>
               ))}
             </div>
 

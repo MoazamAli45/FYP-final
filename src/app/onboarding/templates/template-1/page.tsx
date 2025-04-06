@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { useState, useEffect, useCallback, Suspense, useRef } from "react";
@@ -22,6 +23,7 @@ import EditLayout from "@/components/templates/edit-layout";
 import PreviewResume1 from "@/components/templates/template-1/preview-resume-1";
 import { useReactToPrint } from "react-to-print";
 import { motion, AnimatePresence } from "framer-motion";
+import NotFoundClient from "@/components/dashboard/not-found-client";
 export default function Template1Wrapper() {
   return (
     <Suspense
@@ -43,6 +45,7 @@ function Template1Page() {
   const resumeId = searchParams.get("resumeId");
 
   const [resumeTitle, setResumeTitle] = useState("My Professional Resume");
+  const [showNotFound, setShowNotFound] = useState(false);
 
   const [resumeData, setResumeData] = useState<any>(
     resumeId ? null : initialData
@@ -155,10 +158,14 @@ function Template1Page() {
             if (resume.data) {
               setResumeData(resume.data);
             }
+          } else {
+            setShowNotFound(true);
           }
         } catch (error) {
           console.error("Error fetching resume:", error);
           toast.error("Failed to load resume. Starting with a new template.");
+
+          setShowNotFound(true);
           setResumeData(initialData); // Fallback to initialData
         } finally {
           setIsSaving(false);
@@ -167,6 +174,10 @@ function Template1Page() {
     };
     fetchResumeData();
   }, [resumeId]);
+
+  if (showNotFound) {
+    return <NotFoundClient />;
+  }
 
   return (
     <div

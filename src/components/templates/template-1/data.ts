@@ -93,15 +93,18 @@ const initialSections: Section[] = [
 
 export const initialData: ResumeData = {
   personalInfo: {
-    name: "Syed Moazam Ali",
+    name: "John Doe",
     links: {
-      linkedin: { text: "LinkedIn", url: "linkedin" },
-      github: { text: "Github/ Behance", url: "github" },
-      email: { text: "Email", url: "abc123@gmail.com" },
-      phone: { text: "Phone", url: "+92345-9087654" },
+      linkedin: {
+        text: "LinkedIn",
+        url: "https://www.linkedin.com/in/johndoe",
+      },
+      github: { text: "GitHub", url: "https://github.com/johndoe" },
+      email: { text: "Email", url: "john.doe@example.com" },
+      phone: { text: "Phone", url: "+1 (555) 123-4567" },
     },
   },
-  sections: initialSections,
+  sections: initialSections, // Assumed to be defined elsewhere
   education: [
     {
       id: "1",
@@ -112,22 +115,41 @@ export const initialData: ResumeData = {
       startDate: "June 2022",
       endDate: "August 2024",
     },
+    {
+      id: "2",
+      institution: "University of Example",
+      location: "Example City, Example Country",
+      degree: "Bachelor of Science in Computer Science",
+      gpa: "3.8",
+      startDate: "September 2018",
+      endDate: "June 2022",
+    },
   ],
   skills: {
-    languages: ["Python", "SQL", "JAVA"],
-    frameworks: ["Pandas", "Numpy", "Scikit-Learn", "Matplotlib"],
-    tools: ["Power BI", "Excel", "PowerPoint", "Tableau", "MySQL", "SQLite"],
+    languages: ["Python", "SQL", "JAVA", "JavaScript", "C++"],
+    frameworks: ["Pandas", "Numpy", "Scikit-Learn", "Matplotlib", "React"],
+    tools: [
+      "Power BI",
+      "Excel",
+      "PowerPoint",
+      "Tableau",
+      "MySQL",
+      "SQLite",
+      "Git",
+    ],
     platforms: [
       "PyCharm",
       "Jupyter Notebook",
       "Visual Studio Code",
       "IntelliJ IDEA",
+      "AWS",
     ],
     softSkills: [
       "Rapport Building",
-      "Strong Stakeholder management",
+      "Strong Stakeholder Management",
       "People Management",
-      "Excellent communication",
+      "Excellent Communication",
+      "Problem-Solving",
     ],
   },
   experience: [
@@ -144,6 +166,18 @@ export const initialData: ResumeData = {
         "Collaborated with 3+ cross-functional teams to gather requirements, define project scopes, and ensure alignment with business objectives.",
       ],
     },
+    {
+      id: "2",
+      title: "Software Engineer Intern",
+      company: "Tech Company",
+      link: { text: "Company Website", url: "https://techcompany.com" },
+      startDate: "June 2023",
+      endDate: "August 2023",
+      points: [
+        "Developed web applications using modern frameworks, improving user experience.",
+        "Assisted in debugging and optimizing code, reducing load times by 10%.",
+      ],
+    },
   ],
   projects: [
     {
@@ -157,6 +191,17 @@ export const initialData: ResumeData = {
         "Managed data integration from multiple sources, improving data quality by 30%.",
       ],
     },
+    {
+      id: "2",
+      title: "Personal Portfolio Website",
+      link: { text: "View Project", url: "https://johndoe.com" },
+      startDate: "January 2023",
+      endDate: "March 2023",
+      points: [
+        "Built a responsive website showcasing personal projects and skills.",
+        "Integrated a contact form and dynamic content using JavaScript.",
+      ],
+    },
   ],
   certificates: [
     {
@@ -167,16 +212,34 @@ export const initialData: ResumeData = {
       description:
         "Mastered fundamental Python syntax, proficiently utilizing control flow, loops, functions, and data structures.",
     },
+    {
+      id: "2",
+      name: "Data Analysis Fundamentals",
+      link: {
+        text: "View Certificate",
+        url: "https://example.com/certificate",
+      },
+      date: "October 2023",
+      description:
+        "Gained skills in data visualization and statistical analysis.",
+    },
   ],
   customSections: [
     {
       id: "custom-section-1",
-      sectionTitle: "Custom Section Title",
+      sectionTitle: "Extracurricular Activities",
       items: [
         {
           id: "1",
-          title: "",
-          content: "",
+          title: "Tech Club President",
+          content:
+            "Led a team of 20 members to organize coding workshops and hackathons.",
+        },
+        {
+          id: "2",
+          title: "Volunteer Tutor",
+          content:
+            "Provided free tutoring in math and science to high school students.",
         },
       ],
     },

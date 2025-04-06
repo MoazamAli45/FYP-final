@@ -401,3 +401,20 @@ aside::-webkit-scrollbar-thumb:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* print css */
+@media print {
+  #resumePreviewContent {
+    zoom: 1 !important;
+    padding: 0;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0.6cm;
+}
+
+.hover-border-resume {
+  @apply rounded-md transition-all duration-200 border-2 border-transparent hover:border-primary;
+}

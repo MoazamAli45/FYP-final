@@ -54,26 +54,26 @@ export const initialSections: Section[] = [
 
 export const initialData: ResumeData = {
   personalInfo: {
-    name: "Rahul Kumar",
+    name: "John Doe",
     title:
-      "Full Stack Developer | Integrated Dual Degree (BTech+MTech) | CSE IIT Kharagpur",
+      "Full Stack Developer | Integrated Dual Degree (BTech+MTech) | CSE IIT University",
     links: {
       email: {
-        text: "rahulkumar2007@gmail.com",
-        url: "rahulkumar2007@gmail.com",
+        text: "john.doe2007@gmail.com",
+        url: "john.doe2007@gmail.com",
       },
-      phone: { text: "+918117244114", url: "+918117244114" },
-      location: { text: "India", url: "India" },
-      linkedin: { text: "rahul.kumar", url: "rahul.kumar" },
+      phone: { text: "+928117244114", url: "+928117244114" },
+      location: { text: "USA", url: "USA" },
+      linkedin: { text: "john.doe", url: "https://linkedin.com/in/john.doe" },
     },
   },
   sections: initialSections,
   education: [
     {
       id: "1",
-      institution: "IIT Kharagpur",
+      institution: "IIT University",
       location: "",
-      degree: "Integrated Dual Degree (BTech+Mtech) - 9.2/10",
+      degree: "Integrated Dual Degree (BTech+Mtech) - 3.0/4",
       gpa: "",
       startDate: "2019",
       endDate: "2024",
@@ -144,7 +144,8 @@ export const initialData: ResumeData = {
       name: "AIR 756 in JEE Advance 2019",
       link: { text: "", url: "" },
       date: "03/01/2025",
-      description: "",
+      description:
+        "Achieved an All India Rank of 756 in JEE Advanced 2019, qualifying for admission to IIT University.",
     },
   ],
   custom: [],

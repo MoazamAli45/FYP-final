@@ -5,28 +5,40 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React from "react";
+import React, { useEffect } from "react";
 
-const TEMPLATES_DATA = [
-  {
-    id: "template-1",
-    image: "/assets/templates/template-1.jpg",
-    url: "/onboarding/templates/template-1",
-  },
-  {
-    id: "template-2",
-    image: "/assets/templates/template-2.jpg",
-    url: "/onboarding/templates/template-2",
-  },
-  {
-    id: "template-3",
-    image: "/assets/templates/template-3.jpg",
-    url: "/onboarding/templates/template-3",
-  },
-];
-
-const ChooseTemplate = () => {
+const ChooseTemplate = ({
+  showBackButton = true,
+  template1Url = "/onboarding/templates/template-1",
+  template2Url = "/onboarding/templates/template-2",
+  template3Url = "/onboarding/templates/template-3",
+}: {
+  showBackButton?: boolean;
+  template1Url?: string;
+  template2Url?: string;
+  template3Url?: string;
+}) => {
   const router = useRouter();
+
+  const TEMPLATES_DATA = [
+    {
+      id: "template-1",
+      image: "/assets/templates/template-1.jpg",
+      url: template1Url,
+    },
+    {
+      id: "template-2",
+      image: "/assets/templates/template-2.jpg",
+      url: template2Url,
+    },
+    {
+      id: "template-3",
+      image: "/assets/templates/template-3.jpg",
+      url: template3Url,
+    },
+  ];
+  // Add this to debug and verify props are received correctly
+  useEffect(() => {}, [template1Url, template2Url, template3Url]);
 
   return (
     <>
@@ -40,24 +52,26 @@ const ChooseTemplate = () => {
           />{" "}
         </div>
       </nav>
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 w-full  max-w-screen-xl mx-auto">
-        <Link
-          href="/onboarding/upload-resume"
-          className="flex items-center gap-2 uppercase"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back</span>
-        </Link>
-        <button
-          onClick={async () => {
-            await handleUpdateOnboarding();
-            router?.push("/overview");
-          }}
-          className="flex items-center gap-2 uppercase"
-        >
-          <span>Skip</span>
-        </button>
-      </div>
+      {showBackButton && (
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 w-full  max-w-screen-xl mx-auto">
+          <Link
+            href="/onboarding/upload-resume"
+            className="flex items-center gap-2 uppercase"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Back</span>
+          </Link>
+          <button
+            onClick={async () => {
+              await handleUpdateOnboarding();
+              router?.push("/overview");
+            }}
+            className="flex items-center gap-2 uppercase"
+          >
+            <span>Skip</span>
+          </button>
+        </div>
+      )}
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <h1 className="text-2xl font-bold text-foreground mb-2">

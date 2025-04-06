@@ -197,17 +197,6 @@ export const redirectResumePath = async (linkurl: string) => {
 
     resumePath = data?.path;
     return resumePath;
-
-    // if (resumePath) {
-    //   resumeurl = await getUrl({
-    //     path: resumePath,
-    //     options: {
-    //       validateObjectExistence: false,
-    //       expiresIn: 3600,
-    //       useAccelerateEndpoint: false,
-    //     },
-    //   });
-    // }
   }
 };
 
@@ -229,11 +218,15 @@ export const validateEmail = (value: string) => {
 
 export const formatDate = (timestamp: any) => {
   const date = new Date(timestamp);
+  if (isNaN(date.getTime())) {
+    // If the timestamp is invalid, return it as is
+    return timestamp;
+  }
   return new Intl.DateTimeFormat("en-GB", {
     day: "2-digit",
     month: "long",
     year: "numeric",
-  }).format(date);
+  })?.format(date);
 };
 
 export const formatTime12Hour = (timestamp: any) => {
