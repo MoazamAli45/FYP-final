@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { BrainCircuit } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -45,12 +46,75 @@ import type {
   Link,
   CustomSectionItem,
 } from "./data";
+import AiModal from "../ai-modal";
 
 // Validation constants
 const MAX_POINTS = 5;
 const MAX_POINT_LENGTH = 200;
 const MAX_DESCRIPTION_LENGTH = 300;
 const MAX_SKILLS_PER_CATEGORY = 10;
+
+// AI questions for each section
+const AI_QUESTIONS = {
+  personalInfo: [
+    { text: "What is your highest educational background and specialization?" },
+    { text: "What are your core skills or areas of expertise?" },
+    { text: "Why did you choose this career path or skill area?" },
+    {
+      text: "Are you currently working, or have you worked with any company before?",
+    },
+  ],
+  objective: [
+    { text: "What kind of job or role are you currently looking for?" },
+    { text: "What value do you aim to bring to an organization?" },
+    {
+      text: "Do you prefer working in a specific industry or type of company?",
+    },
+    { text: "What is your long-term professional goal?" },
+  ],
+  education: [
+    { text: "What degrees or certifications have you completed?" },
+    { text: "From which institution(s) did you graduate?" },
+    { text: "What was your major or area of specialization?" },
+    {
+      text: "Did you receive any honors, awards, or notable achievements during your studies?",
+    },
+  ],
+  experience: [
+    { text: "What roles have you held in your previous or current jobs?" },
+    { text: "What were your key responsibilities or accomplishments?" },
+    { text: "What tools, technologies, or skills did you use in those roles?" },
+    { text: "Have you led any teams or projects?" },
+  ],
+  skills: [
+    { text: "What technical or soft skills do you consider your strongest?" },
+    {
+      text: "Which tools, platforms, or programming languages are you most comfortable with?",
+    },
+    { text: "Have you used any of these skills in real projects or jobs?" },
+    { text: "Are you currently learning or improving any new skills?" },
+  ],
+  projects: [
+    { text: "Can you briefly describe your most impactful projects?" },
+    { text: "What was your role and responsibility in those projects?" },
+    { text: "What technologies or methodologies did you use?" },
+    { text: "What was the outcome or success of the project?" },
+  ],
+  certificates: [
+    { text: "What certifications have you completed relevant to your field?" },
+    { text: "Who issued the certification, and when?" },
+    {
+      text: "Were these certifications part of your career advancement goals?",
+    },
+    { text: "Have they helped you gain job opportunities or recognition?" },
+  ],
+  customSection: [
+    { text: "What is the purpose of this custom section?" },
+    { text: "What kind of information would you like to include here?" },
+    { text: "How does this information strengthen your resume?" },
+    { text: "Is there any specific format you prefer for this section?" },
+  ],
+};
 
 // Validation functions
 const validatePersonalInfo = (personalInfo: PersonalInfo): boolean => {
@@ -315,6 +379,12 @@ export default function EditResume({
     item: CustomSectionItem;
   } | null>(null);
 
+  // AI Modal state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiModalSection, setAiModalSection] = useState<string>("");
+  const [aiModalSectionId, setAiModalSectionId] = useState<string | null>(null);
+  const [aiModalItemId, setAiModalItemId] = useState<string | null>(null);
+
   // Debounced auto-save
   const [pendingSave, setPendingSave] = useState(false);
 
@@ -384,6 +454,38 @@ export default function EditResume({
     }
 
     setActiveId(null);
+  };
+
+  const handleOpenAiModal = (
+    section: string,
+    itemId: string | null = null,
+    sectionId: string | null = null
+  ) => {
+    setAiModalSection(section);
+    setAiModalItemId(itemId);
+    setAiModalSectionId(sectionId);
+    setAiModalOpen(true);
+  };
+
+  const handleCloseAiModal = () => {
+    setAiModalOpen(false);
+  };
+
+  //       AI Processing Logic
+
+  const handleAiContinue = (answers: string[]) => {
+    // Here you would implement the AI processing logic
+    // For now, we'll just show a toast with the answers
+    toast.success("AI suggestions received! Implementing changes...");
+
+    // Close the modal
+    setAiModalOpen(false);
+
+    // You would process the answers and update the resume data here
+    console.log("AI answers:", answers);
+    console.log("For section:", aiModalSection);
+    console.log("Item ID:", aiModalItemId);
+    console.log("Section ID:", aiModalSectionId);
   };
 
   const handleSectionVisibility = (sectionId: string) => {
@@ -869,6 +971,34 @@ export default function EditResume({
     );
   };
 
+  //<--------------------- Add AI button to individual items-------------------->
+  const addAiButtonToItemControls = (
+    section: string,
+    itemId: string,
+    sectionId: string | null = null
+  ) => (
+    <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
+      <button
+        onClick={() => handleOpenAiModal(section, itemId, sectionId)}
+        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+      >
+        <BrainCircuit className="w-4 h-4 text-[#356CB5]" />
+      </button>
+      <button
+        onClick={() => handleEdit(section, itemId, sectionId)}
+        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+      >
+        <Edit2 className="w-4 h-4 text-gray-600" />
+      </button>
+      <button
+        onClick={() => handleDelete(section, itemId, sectionId)}
+        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+      >
+        <Trash2 className="w-4 h-4 text-red-600" />
+      </button>
+    </div>
+  );
+
   const renderSection = (section: Section) => {
     switch (section.type) {
       case "education":
@@ -879,20 +1009,7 @@ export default function EditResume({
                 key={edu.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-[#356CB5]"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() => handleEdit("education", edu.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete("education", edu.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls("education", edu.id)}
                 {editingSection === "education" && editingId === edu.id ? (
                   <div className="space-y-2">
                     <input
@@ -1108,20 +1225,7 @@ export default function EditResume({
                     key={item.id}
                     className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-[#356CB5]"
                   >
-                    <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                      <button
-                        onClick={() => handleEdit(section.type, item.id)}
-                        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        <Edit2 className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(section.type, item.id)}
-                        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </div>
+                    {addAiButtonToItemControls(section.type, item.id)}
                     {editingSection === section.type &&
                     editingId === item.id ? (
                       <div
@@ -1387,24 +1491,7 @@ export default function EditResume({
                 key={item.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-[#356CB5] mb-4"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() =>
-                      handleEdit("customItem", item.id, section.id)
-                    }
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDelete("customItem", item.id, section.id)
-                    }
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls("customItem", item.id, section.id)}
                 {editingSection === "customItem" &&
                 editingId === item.id &&
                 editingSectionId === section.id ? (
@@ -1535,7 +1622,6 @@ export default function EditResume({
         return null;
     }
   };
-
   return (
     <div className="max-w-[850px] mx-auto p-8 bg-white mb-4 shadow-lg rounded-lg">
       <style jsx global>{`
@@ -1553,6 +1639,13 @@ export default function EditResume({
       {/* Personal Info Section */}
       <div className="group relative mb-8">
         <div className="absolute hidden group-hover:flex gap-2 -right-4 -top-2">
+          {/*                 <---------------PERSONAL INFO AI BUTTON-------------------->                       */}
+          <button
+            onClick={() => handleOpenAiModal("personalInfo")}
+            className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+          >
+            <BrainCircuit className="w-5 h-5 text-[#356CB5]" />
+          </button>
           <button
             onClick={() => {
               if (editingSection === "personalInfo") {
@@ -1705,7 +1798,16 @@ export default function EditResume({
           </div>
         )}
       </div>
-
+      {/* <---------------------------AI Modal Component--------------------------> */}
+      <AiModal
+        isOpen={aiModalOpen}
+        onClose={handleCloseAiModal}
+        onContinue={handleAiContinue}
+        sectionTitle={aiModalSection}
+        questions={
+          AI_QUESTIONS[aiModalSection as keyof typeof AI_QUESTIONS] || []
+        }
+      />
       <hr className="border-t border-gray-300 my-6" />
 
       <DndContext
