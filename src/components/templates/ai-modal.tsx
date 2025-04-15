@@ -10,7 +10,7 @@ interface Question {
 interface AiModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onContinue: (answers: string[]) => void;
+  onContinue: (answers: Record<string, string>) => void;
   sectionTitle: string;
   questions: Question[];
 }
@@ -22,28 +22,48 @@ export default function AiModal({
   sectionTitle,
   questions,
 }: AiModalProps) {
-  const [answers, setAnswers] = useState<string[]>(
-    Array(questions.length).fill("")
-  );
+  // Change the state type to use indices as keys
+  const [answers, setAnswers] = useState<Record<number, string>>(() => {
+    // Initialize with an object created from questions using indices
+    const initialAnswers: Record<number, string> = {};
+    questions.forEach((_, index) => {
+      initialAnswers[index] = "";
+    });
+    return initialAnswers;
+  });
 
   if (!isOpen) return null;
 
-  console.log("QUESTIONS", questions);
-
+  // Update the handleAnswerChange function to use index instead of questionText
   const handleAnswerChange = (index: number, value: string) => {
-    const newAnswers = [...answers];
-    newAnswers[index] = value;
-    setAnswers(newAnswers);
+    // Update the specific question's answer in the object
+    setAnswers((prev) => ({
+      ...prev,
+      [index]: value,
+    }));
   };
 
   const handleContinue = () => {
-    onContinue(answers);
-    setAnswers(Array(questions.length).fill(""));
+    // Create a question-answer mapping to pass to the parent component
+    const questionAnswerPairs: Record<string, string> = {};
+    questions.forEach((question, index) => {
+      questionAnswerPairs[question.text] = answers[index];
+    });
+
+    // Pass the key-pair object to the parent component
+    onContinue(questionAnswerPairs);
+
+    // Reset answers
+    const resetAnswers: Record<number, string> = {};
+    questions.forEach((_, index) => {
+      resetAnswers[index] = "";
+    });
+    setAnswers(resetAnswers);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative  ">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg p-6 relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
