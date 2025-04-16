@@ -56,66 +56,62 @@ const MAX_SKILLS_PER_CATEGORY = 10;
 
 // AI questions for each section
 const AI_QUESTIONS = {
-  personalInfo: [
-    { text: "What is your highest educational background and specialization?" },
-    { text: "What are your core skills or areas of expertise?" },
-    { text: "Why did you choose this career path or skill area?" },
-    {
-      text: "Are you currently working, or have you worked with any company before?",
-    },
-  ],
-  objective: [
-    { text: "What kind of job or role are you currently looking for?" },
-    { text: "What value do you aim to bring to an organization?" },
-    {
-      text: "Do you prefer working in a specific industry or type of company?",
-    },
-    { text: "What is your long-term professional goal?" },
-  ],
   education: [
-    { text: "What degrees or certifications have you completed?" },
-    { text: "From which institution(s) did you graduate?" },
-    { text: "What was your major or area of specialization?" },
     {
-      text: "Did you receive any honors, awards, or notable achievements during your studies?",
+      text: "Can you describe your educational background, including the institutions you attended, the degrees you obtained, your majors, GPAs, and the dates you attended?",
+    },
+    {
+      text: "Did you receive any notable honors or awards during your education?",
+    },
+    {
+      text: "Where were the institutions you attended located?",
+    },
+  ],
+  skills: [
+    { text: "What programming languages are you proficient in?" },
+    { text: "What frameworks or libraries do you have experience with?" },
+    { text: "What tools or software are you skilled in using?" },
+    {
+      text: "What platforms or environments are you comfortable working with?",
+    },
+    {
+      text: "What soft skills do you possess that are relevant to your profession?",
     },
   ],
   experience: [
-    { text: "What roles have you held in your previous or current jobs?" },
-    { text: "What were your key responsibilities or accomplishments?" },
-    { text: "What tools, technologies, or skills did you use in those roles?" },
-    { text: "Have you led any teams or projects?" },
-  ],
-  skills: [
-    { text: "What technical or soft skills do you consider your strongest?" },
     {
-      text: "Which tools, platforms, or programming languages are you most comfortable with?",
+      text: "What professional roles have you held, including job titles, companies, and dates?",
     },
-    { text: "Have you used any of these skills in real projects or jobs?" },
-    { text: "Are you currently learning or improving any new skills?" },
+    {
+      text: "What were your key responsibilities and accomplishments in each role?",
+    },
+    { text: "What technologies or skills did you use in each position?" },
+    { text: "Have you led any teams or projects in your professional career?" },
   ],
   projects: [
-    { text: "Can you briefly describe your most impactful projects?" },
-    { text: "What was your role and responsibility in those projects?" },
-    { text: "What technologies or methodologies did you use?" },
-    { text: "What was the outcome or success of the project?" },
+    {
+      text: "Can you describe the most significant projects you have worked on, including your role, the technologies used, and the outcomes?",
+    },
+    {
+      text: "Please provide details such as project titles, dates, and any links if available.",
+    },
   ],
   certificates: [
-    { text: "What certifications have you completed relevant to your field?" },
-    { text: "Who issued the certification, and when?" },
+    { text: "What relevant certifications have you obtained?" },
+    { text: "Who issued each certification, and when did you receive it?" },
     {
-      text: "Were these certifications part of your career advancement goals?",
+      text: "Can you provide a brief description of what each certification entails?",
     },
-    { text: "Have they helped you gain job opportunities or recognition?" },
   ],
-  customSection: [
-    { text: "What is the purpose of this custom section?" },
-    { text: "What kind of information would you like to include here?" },
-    { text: "How does this information strengthen your resume?" },
-    { text: "Is there any specific format you prefer for this section?" },
+  customSections: [
+    {
+      text: "Do you have any additional sections you would like to include in your resume, such as extracurricular activities, publications, or volunteer work?",
+    },
+    {
+      text: "For each custom section, what is the title, and what are the key points or items you want to include?",
+    },
   ],
 };
-
 // Validation functions
 const validatePersonalInfo = (personalInfo: PersonalInfo): boolean => {
   if (!personalInfo.name.trim()) {
@@ -473,7 +469,7 @@ export default function EditResume({
 
   //       AI Processing Logic
 
-  const handleAiContinue = (answers: string[]) => {
+  const handleAiContinue = (answers: Record<string, string>) => {
     // Here you would implement the AI processing logic
     // For now, we'll just show a toast with the answers
     toast.success("AI suggestions received! Implementing changes...");
@@ -482,10 +478,33 @@ export default function EditResume({
     setAiModalOpen(false);
 
     // You would process the answers and update the resume data here
-    console.log("AI answers:", answers);
-    console.log("For section:", aiModalSection);
-    console.log("Item ID:", aiModalItemId);
-    console.log("Section ID:", aiModalSectionId);
+    const requestBody = {
+      sectionName: aiModalSection,
+      questionAnswers: answers,
+    };
+    console.log(requestBody);
+    const API_URL =
+      "https://flask-text-generation.vercel.app/generate_resume_section";
+
+    fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch resume section content");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Generated Resume Section:", data);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   const handleSectionVisibility = (sectionId: string) => {
