@@ -8,6 +8,8 @@ import { generateClient } from "aws-amplify/data"; // Verify this import if usin
 import type { Schema } from "../../../amplify/data/resource";
 import useAuthUser from "@/hooks/use-auth-user";
 import { getUrl } from "aws-amplify/storage";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 enum NotificationType {
   Live = "live",
@@ -171,6 +173,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="flex-grow h-full m-0 p-0">
         <div className="relative py-[20px] hidden bg-white border-b border-[#EAECF0] justify-end lg:flex lg:px-[32px] mb-4">
           <div className="flex gap-5 items-center">
+            <Link href="/resume-checker">
+              <Button className="bg-primary hover:bg-primary/90">
+                Check Resume ATS
+              </Button>
+            </Link>
             <div
               className="relative mt-2 cursor-pointer"
               onClick={handleBellClick}
