@@ -62,8 +62,8 @@ const Page = () => {
   //  DATE RANGE
   //  DATE
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2024, 6, 20),
-    to: addDays(new Date(2024, 6, 20), 20),
+    from: addDays(new Date(), -365), // One year ago from today
+    to: new Date(),
   });
 
   const user = useAuthUser();
@@ -79,7 +79,6 @@ const Page = () => {
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
-  const [thumbnail, setThumbnail] = useState<any>();
 
   //   SUBSCRIPTION
   const SUBSCRIPTION = user?.["custom:subscription"];

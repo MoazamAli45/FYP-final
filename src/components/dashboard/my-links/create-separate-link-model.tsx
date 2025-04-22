@@ -64,7 +64,10 @@ function CreateSeparateLinkModal({
       try {
         setIsLoadingResumes(true);
         const resumes = await fetchResumesByUserId(user?.userId);
-        setFetchedResumes(resumes);
+        const filteredResumes = resumes.filter(
+          (resume: any) => resume.path && resume.path.trim() !== ""
+        );
+        setFetchedResumes(filteredResumes);
       } catch (error) {
         toast.error(`${error}`);
       } finally {

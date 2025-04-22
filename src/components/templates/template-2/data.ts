@@ -49,7 +49,7 @@ export const initialSections: Section[] = [
   { id: "2", title: "EDUCATION", isVisible: true, type: "education" },
   { id: "3", title: "PROJECT", isVisible: true, type: "projects" },
   { id: "4", title: "SKILLS", isVisible: true, type: "skills" },
-  { id: "5", title: "Achievement", isVisible: true, type: "certificates" },
+  { id: "5", title: "Certificates", isVisible: true, type: "certificates" },
 ];
 
 export const initialData: ResumeData = {

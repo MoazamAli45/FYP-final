@@ -1,6 +1,7 @@
 import { getErrorMessage } from "@/utils/get-error-message";
 
 import {
+  fetchAuthSession,
   signUp,
   confirmSignUp,
   signIn,
@@ -52,6 +53,7 @@ export async function handleSignUp(
           email: userDetails?.email,
           "custom:subscription": "FREE",
           "custom:onboarded": "false",
+          "custom:credits": "15",
         },
       },
     });
@@ -189,8 +191,19 @@ export async function handleUpdateOnboarding() {
 
   return "success";
 }
-
-//   FUNCTION HANDLE UPDATE
+export async function handleUpdateCredits(credits: number) {
+  try {
+    await updateUserAttribute({
+      userAttribute: {
+        attributeKey: "custom:credits",
+        value: String(credits),
+      },
+    });
+  } catch (error) {
+    handleError(error);
+    return null;
+  }
+}
 //   FUNCTION HANDLE UPDATE
 export async function handleUpdateProfile(
   prevState: "success" | "error" | undefined,

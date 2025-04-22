@@ -15,6 +15,7 @@ import {
   Linkedin,
   ExternalLink,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -39,6 +40,10 @@ import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
 
 import type { ResumeData, Section, Link } from "./data";
+import AiModal from "../ai-modal";
+import { handleUpdateCredits } from "@/lib/cognitoActions";
+import { AI_GENERATION_CREDITS_SUBTRACTED } from "@/constants/constants";
+import UpgradeModal from "@/components/shared/upgrade-plan-modal";
 
 // Add these props to the EditResume component
 interface EditResumeProps {
@@ -46,6 +51,8 @@ interface EditResumeProps {
   initialResumeData: any;
   onSuccessfulEdit?: (autoSave: boolean) => Promise<any>;
   resumeId?: string | null;
+  localCredits: number;
+  setLocalCredits: (credits: number) => void;
 }
 
 const validatePersonalInfo = (personalInfo: any): boolean => {
@@ -57,6 +64,68 @@ const validatePersonalInfo = (personalInfo: any): boolean => {
 };
 
 const MAX_CONTENT_LENGTH = 500; // Maximum character length for content fields
+
+// AI questions for each section
+const AI_QUESTIONS = {
+  personalInfo: [
+    {
+      text: "What is your current professional role or area of expertise (e.g., Full Stack Developer, Data Scientist)?",
+    },
+    {
+      text: "What are your most significant educational qualifications, including degrees and majors (e.g., BTech in Computer Science, Integrated Dual Degree)?",
+    },
+    {
+      text: "Which institutions or organizations are you affiliated with that you would like to highlight (e.g., IIT University, a notable company)?",
+    },
+  ],
+  education: [
+    {
+      text: "Can you describe your educational background, including the institutions you attended, the degrees you obtained, your majors, GPAs, and the dates you attended?",
+    },
+    {
+      text: "Did you receive any notable honors or awards during your education?",
+    },
+    {
+      text: "Where were the institutions you attended located?",
+    },
+  ],
+  skills: [
+    { text: "What programming languages are you proficient in?" },
+    { text: "What frameworks or libraries do you have experience with?" },
+    { text: "What tools or software are you skilled in using?" },
+    {
+      text: "What platforms or environments are you comfortable working with?",
+    },
+    {
+      text: "What soft skills do you possess that are relevant to your profession?",
+    },
+  ],
+  experience: [
+    {
+      text: "What professional roles have you held, including job titles, companies, and dates?",
+    },
+    {
+      text: "What were your key responsibilities and accomplishments in each role?",
+    },
+    { text: "What technologies or skills did you use in each position?" },
+    { text: "Have you led any teams or projects in your professional career?" },
+  ],
+  projects: [
+    {
+      text: "Can you describe the most significant projects you have worked on, including your role, the technologies used, and the outcomes?",
+    },
+    {
+      text: "Please provide details such as project titles, dates, and any links if available.",
+    },
+  ],
+  certificates: [
+    { text: "What relevant certifications have you obtained?" },
+    { text: "Who issued each certification, and when did you receive it?" },
+    {
+      text: "Can you provide a brief description of what each certification entails?",
+    },
+  ],
+};
 
 const DragHandle = ({ id }: any) => {
   const { attributes, listeners } = useSortable({ id });
@@ -93,6 +162,8 @@ export default function EditResume({
   initialResumeData,
   onSuccessfulEdit,
   resumeId,
+  localCredits,
+  setLocalCredits,
 }: EditResumeProps) {
   // Initialize with initialResumeData instead of initialData
   const [data, setData] = useState(initialResumeData);
@@ -111,8 +182,18 @@ export default function EditResume({
   const [isAddingCustomItem, setIsAddingCustomItem] = useState(false);
   const [activeId, setActiveId] = useState(null);
 
+  // AI Modal state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiModalSection, setAiModalSection] = useState<string>("");
+  const [aiModalSectionId, setAiModalSectionId] = useState<string | null>(null);
+  const [aiModalItemId, setAiModalItemId] = useState<string | null>(null);
+
+  const [showModalButtonText, setShowModalButtonText] = useState("Continue");
+
   // Add state for auto-save functionality
   const [pendingSave, setPendingSave] = useState(false);
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Notify parent component when data changes
   useEffect(() => {
@@ -179,6 +260,253 @@ export default function EditResume({
     }
 
     setActiveId(null);
+  };
+
+  const handleOpenAiModal = (
+    section: string,
+    itemId: string | null = null,
+    sectionId: string | null = null
+  ) => {
+    if (localCredits > 0) {
+      // Proceed with opening the AI modal
+      setAiModalSection(section);
+      setAiModalItemId(itemId);
+      setAiModalSectionId(sectionId);
+      setAiModalOpen(true);
+    } else {
+      // Show upgrade modal or prompt to buy credits
+      setShowUpgradeModal(true);
+    }
+  };
+
+  const handleCloseAiModal = () => {
+    setAiModalOpen(false);
+  };
+
+  //       AI Processing Logic
+  const handleAiContinue = (answers: Record<string, string>) => {
+    setShowModalButtonText("Generating...");
+
+    // Close the modal
+
+    // Prepare the request body for the API
+    const requestBody = {
+      sectionName: aiModalSection,
+      questionAnswers: answers,
+    };
+
+    console.log("Request Body:", requestBody);
+
+    //  FLASK AI API------------------------------->
+    const API_URL =
+      "https://flask-text-generation.vercel.app/generate_resume_section";
+
+    fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch resume section content");
+        }
+        return response.json();
+      })
+      .then((responseData) => {
+        console.log("Generated Resume Section:", responseData);
+
+        const parsedData = responseData.sectionData[0];
+        const parsedDataCertificate = responseData.sectionData;
+
+        // Update state based on section type
+        setData((prev: any) => {
+          switch (aiModalSection) {
+            case "personalInfo": {
+              const newPersonalInfo = {
+                ...prev.personalInfo,
+                title: parsedData.title || prev.personalInfo.title,
+              };
+              return { ...prev, personalInfo: newPersonalInfo };
+            }
+            case "education": {
+              const newEducation = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                institution: parsedData.institution || "",
+                location: parsedData.location || "",
+                degree: parsedData.degree || "",
+                gpa: parsedData.gpa || "",
+                startDate: parsedData.startDate || "",
+                endDate: parsedData.endDate || "",
+              };
+
+              console.log("AI ID", aiModalItemId);
+              if (aiModalItemId) {
+                // Update existing education entry
+                return {
+                  ...prev,
+                  education: prev.education.map((edu: any) => {
+                    console.log("AI ID", aiModalItemId, edu.id);
+                    return edu.id === aiModalItemId ? newEducation : edu;
+                  }),
+                };
+              } else {
+                // Add new education entry
+                return {
+                  ...prev,
+                  education: [...prev.education, newEducation],
+                };
+              }
+            }
+
+            case "experience": {
+              const newExperience = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                title: parsedData.title || "",
+                company: parsedData.company || "",
+                link: {
+                  text: parsedData.link?.text || "",
+                  url: parsedData.link?.url || "",
+                },
+                startDate: parsedData.startDate || "",
+                endDate: parsedData.endDate || "",
+                points: parsedData.points || [""],
+              };
+
+              if (aiModalItemId) {
+                // Update existing experience entry
+                return {
+                  ...prev,
+                  experience: prev.experience.map((exp: any) =>
+                    exp.id === aiModalItemId ? newExperience : exp
+                  ),
+                };
+              } else {
+                // Add new experience entry
+                return {
+                  ...prev,
+                  experience: [...prev.experience, newExperience],
+                };
+              }
+            }
+
+            case "projects": {
+              const newProject = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                title: parsedData.projectTitle || "",
+                link: {
+                  text: parsedData.link?.text || "",
+                  url: parsedData.link?.url || "",
+                },
+                startDate: parsedData.startDate || "",
+                endDate: parsedData.endDate || "",
+                points: parsedData?.description
+                  ? [parsedData.description]
+                  : [""],
+              };
+
+              if (aiModalItemId) {
+                // Update existing project entry
+                return {
+                  ...prev,
+                  projects: prev.projects.map((proj: any) =>
+                    proj.id === aiModalItemId ? newProject : proj
+                  ),
+                };
+              } else {
+                // Add new project entry
+                return {
+                  ...prev,
+                  projects: [...prev.projects, newProject],
+                };
+              }
+            }
+
+            case "certificates": {
+              const newCertificate = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                name: parsedDataCertificate?.name || "",
+                link: {
+                  text: parsedDataCertificate?.link?.text || "",
+                  url: parsedDataCertificate?.link?.url || "",
+                },
+                date: parsedDataCertificate?.date || "",
+                description: parsedDataCertificate?.description || "",
+              };
+
+              if (aiModalItemId) {
+                // Update existing certificate entry
+
+                return {
+                  ...prev,
+                  certificates: prev?.certificates?.map((cert: any) =>
+                    cert.id === aiModalItemId ? newCertificate : cert
+                  ),
+                };
+              } else {
+                // Add new certificate entry
+                return {
+                  ...prev,
+                  certificates: [...prev?.certificates, newCertificate],
+                };
+              }
+            }
+
+            case "skills": {
+              // Assuming API returns { category: string, skills: string[] }
+              const category =
+                responseData.category?.toLowerCase() || "general";
+              const skills = responseData.skills || [];
+
+              if (!skills.length) {
+                toast.error("No skills provided by AI");
+                return prev;
+              }
+
+              const newSkills = {
+                ...prev.skills,
+                [category]: skills,
+              };
+
+              return {
+                ...prev,
+                skills: newSkills,
+              };
+            }
+
+            default:
+              toast.error("Unknown section type");
+              return prev;
+          }
+        });
+
+        // Subtract credits after content generation is successful
+        const updatedCredits = localCredits - AI_GENERATION_CREDITS_SUBTRACTED;
+        if (updatedCredits < 0) {
+          toast.error("Not enough credits to generate content");
+          return;
+        }
+        handleUpdateCredits(updatedCredits)
+          .then(() => {
+            setLocalCredits(updatedCredits);
+          })
+          .catch((error) => {
+            console.error("Error updating credits:", error);
+            toast.error("Failed to update credits after AI generation");
+          });
+
+        setAiModalOpen(false);
+        setShowModalButtonText("Continue");
+        // // Trigger auto-save after successful update
+        // triggerAutoSave();
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        setShowModalButtonText("Continue");
+        setAiModalOpen(false);
+        toast.error(`Failed to process AI suggestions: ${error.message}`);
+      });
   };
 
   const handleSectionVisibility = (sectionId: string) => {
@@ -628,6 +956,32 @@ export default function EditResume({
     );
   };
 
+  //<--------------------- Add AI button to individual items-------------------->
+  const addAiButtonToItemControls = (section: string, itemId: string) => (
+    <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
+      {section !== "customItem" && (
+        <button
+          onClick={() => handleOpenAiModal(section, itemId)}
+          className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+        >
+          <Sparkles className="w-4 h-4 text-[#356CB5]" />
+        </button>
+      )}
+      <button
+        onClick={() => handleEdit(section, itemId)}
+        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+      >
+        <Edit2 className="w-4 h-4 text-gray-600" />
+      </button>
+      <button
+        onClick={() => handleDelete(section, itemId)}
+        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+      >
+        <Trash2 className="w-4 h-4 text-red-600" />
+      </button>
+    </div>
+  );
+
   const renderSection = (section: Section) => {
     switch (section.type) {
       case "education":
@@ -638,20 +992,7 @@ export default function EditResume({
                 key={edu.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-primary"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() => handleEdit("education", edu.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-primary" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete("education", edu.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls("education", edu.id)}
                 {editingSection === "education" && editingId === edu.id ? (
                   <div className="space-y-2">
                     <input
@@ -853,20 +1194,7 @@ export default function EditResume({
                 key={item.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-primary mb-4"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() => handleEdit(section.type, item.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-primary" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(section.type, item.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls(section.type, item.id)}
                 {editingSection === section.type && editingId === item.id ? (
                   <div
                     className="space-y-2"
@@ -1074,20 +1402,7 @@ export default function EditResume({
                 key={item.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-primary"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() => handleEdit("certificates", item.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-primary" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete("certificates", item.id)}
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls("certificates", item.id)}
                 {editingSection === "certificates" && editingId === item.id ? (
                   <div
                     className="space-y-2"
@@ -1468,6 +1783,12 @@ export default function EditResume({
       <div className="group relative mb-8">
         <div className="absolute hidden group-hover:flex gap-2 -right-4 -top-2">
           <button
+            onClick={() => handleOpenAiModal("personalInfo", " ")}
+            className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+          >
+            <Sparkles className="w-4 h-4 text-[#356CB5]" />
+          </button>
+          <button
             onClick={() => {
               if (editingSection === "personalInfo") {
                 if (validatePersonalInfo(data.personalInfo)) {
@@ -1673,6 +1994,19 @@ export default function EditResume({
         </DragOverlay>
       </DndContext>
 
+      {/* <---------------------------AI Modal Component--------------------------> */}
+      <AiModal
+        isOpen={aiModalOpen}
+        onClose={handleCloseAiModal}
+        onContinue={handleAiContinue}
+        sectionTitle={aiModalSection}
+        showModalButtonText={showModalButtonText}
+        credits={localCredits}
+        questions={
+          AI_QUESTIONS[aiModalSection as keyof typeof AI_QUESTIONS] || []
+        }
+      />
+
       {/* Add New Section button */}
       <div className="relative mt-8 pt-6 border-t border-gray-300">
         {isAddingSection ? (
@@ -1715,6 +2049,11 @@ export default function EditResume({
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Saving changes...</span>
         </div>
+      )}
+
+      {/*   FOR SHOWING UPGRADE MODAL */}
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
     </div>
   );

@@ -48,6 +48,7 @@ import UpgradeModal from "@/components/shared/upgrade-plan-modal";
 import { downloadData } from "aws-amplify/storage";
 import HeatmapPreview from "@/components/dashboard/my-resumes/preview-heatmap";
 import BuiltResumeCard from "@/components/shared/built-resume-card";
+import { useRouter } from "next/navigation";
 //    IN CONTANTS FILE
 const itemsPerPage = TOTAL_RESUME_CARD_PER_PAGE;
 
@@ -58,7 +59,8 @@ const Page = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [status, setStatus] = useState<string>("All");
 
-  const [resumeType, setResumeType] = useState<string>("Uploaded");
+  const router = useRouter();
+  const [resumeType, setResumeType] = useState<string>("Built");
 
   //   RESUMES
   const [resumes, setResumes] = useState<any[]>([]);
@@ -232,6 +234,8 @@ const Page = () => {
     fetchStats();
   }, [user]); // Dependency array includes only `user`
 
+  console.log("resumes", resumes);
+
   const filteredResumes = resumes
     .filter((resume) =>
       resume.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -256,8 +260,6 @@ const Page = () => {
 
       return resumeDate >= startDate && resumeDate <= endDate;
     });
-
-  console.log("FILTERED Resumes", filteredResumes);
 
   const totalPages = Math.ceil(filteredResumes.length / itemsPerPage);
 
@@ -349,6 +351,24 @@ const Page = () => {
     setPublishedLinkModal(true);
   };
 
+  const handleBuiltResumeButton = () => {
+    if (
+      SUBSCRIPTION === "FREE" &&
+      totalResumes >= TOTAL_RESUME_SUBSCRIPTION_FREE
+    ) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    if (
+      SUBSCRIPTION === "STANDARD" &&
+      totalResumes >= TOTAL_RESUME_SUBSCRIPTION_STANDARD
+    ) {
+      setShowUpgradeModal(true);
+      return;
+    }
+    router.push("/build-resume/choose-template");
+  };
+
   return (
     <div className="w-full h-full flex flex-col py-2 px-5 sm:px-8">
       {SUBSCRIPTION !== "PRO" && <UpgradeBanner />}
@@ -359,6 +379,7 @@ const Page = () => {
         buttonIconPath="/assets/upload-2.svg"
         showDevelop={true}
         onButtonClick={openModal}
+        onBuiltResumeButtonClick={handleBuiltResumeButton}
       >
         <div className="flex flex-col sm:flex-row sm:flex-wrap  md:items-center sm:space-y-0 sm:space-x-3 py-3">
           {ResumeStats.map((stats, index) => (

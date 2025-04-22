@@ -1,28 +1,51 @@
 import Image from "next/image";
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 interface ModalProps {
   onClose?: () => void;
 }
 
+const backdropVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: 50 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 300, damping: 25 },
+  },
+};
+
 const UpgradeModal: React.FC<ModalProps> = ({ onClose }) => {
   const router = useRouter();
+
   const handleCloseModal = () => {
-    if (onClose) {
-      onClose();
-    }
+    if (onClose) onClose();
   };
+
   const handleUpgradeClick = () => {
     router.push("/my-plans");
   };
 
   return (
-    <div className="fixed inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50 h-full w-full">
-      <div
-        className={`bg-white sm:w-[512px] overflow-hidden sm:h-[280px] sm:max-w-[512px] flex flex-col p-6 rounded-[8px]`}
+    <motion.div
+      className="fixed inset-0 flex z-50 items-center justify-center bg-black bg-opacity-50 h-full w-full"
+      variants={backdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+    >
+      <motion.div
+        className="bg-white sm:w-[512px] overflow-hidden sm:h-[280px] sm:max-w-[512px] flex flex-col p-6 rounded-[8px]"
         style={{ boxShadow: "0px 4px 6px -2px #10182808" }}
+        variants={modalVariants}
       >
         <div className="flex justify-end w-full ">
           <button
@@ -69,8 +92,8 @@ const UpgradeModal: React.FC<ModalProps> = ({ onClose }) => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

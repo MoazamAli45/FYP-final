@@ -6,16 +6,13 @@ import React, { useState } from "react";
 
 const Page = () => {
   const [isMonthly, setIsMonthly] = useState(false);
-  const user = useAuthUser();
-
-  const SUBSCRIPTION = user?.["custom:subscription"] || "FREE";
 
   const PLANS = [
     {
       planName: "Free",
       monthly: "FREE",
       yearly: "FREE",
-      standard: false,
+      showBlueBg: false,
       Icon: "/assets/dashboard/free.svg",
       features: [
         "2 Resumes",
@@ -27,7 +24,7 @@ const Page = () => {
       planName: "Standard",
       monthly: "$7/month",
       yearly: "$67/year",
-      standard: true,
+      showBlueBg: true,
       Icon: "/assets/dashboard/standard.svg",
       features: [
         "5 Resumes",
@@ -40,7 +37,7 @@ const Page = () => {
       planName: "Pro",
       monthly: "$12/month",
       yearly: "$115/year",
-      standard: false,
+      showBlueBg: false,
       Icon: "/assets/dashboard/pro.svg",
       features: [
         "10 Resumes",
@@ -50,6 +47,15 @@ const Page = () => {
         "Custom URL for link",
       ],
     }, // 20% discount applied
+    {
+      planName: "AI Credits",
+      monthly: "$5",
+      yearly: "$5",
+
+      showBlueBg: true,
+      Icon: "/assets/dashboard/standard.svg",
+      features: ["Buy 50 credits", "Generate AI resume content"],
+    },
   ];
 
   return (
@@ -83,8 +89,9 @@ const Page = () => {
                 planName={plan.planName}
                 price={!isMonthly ? plan.monthly : plan.yearly}
                 features={plan.features}
-                standard={plan.standard}
+                showBlueBg={plan.showBlueBg}
                 Icon={plan.Icon}
+                index={index}
               />
             ))}
           </div>

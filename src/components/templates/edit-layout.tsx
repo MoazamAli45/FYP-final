@@ -5,13 +5,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { handleUpdateOnboarding } from "@/lib/cognitoActions";
 import { useRouter } from "next/navigation";
+import useAuthUser from "@/hooks/use-auth-user";
 
 const EditLayout = ({
   showBackButton = true,
+  localCredits = 0,
 }: {
   showBackButton?: boolean;
+  localCredits?: number;
 }) => {
   const router = useRouter();
+  const user = useAuthUser();
+
+  console.log("user  1", user);
+  console.log("CREDITS", localCredits);
 
   return (
     <>
@@ -28,10 +35,13 @@ const EditLayout = ({
 
         <div className="flex gap-2 items-center">
           <span className="text-primary text-base font-medium">
-            500 credits left
+            {localCredits} credits left
           </span>
           <Image
-            src={"/assets/onboard/avatar.svg"}
+            src={
+              user?.picture ||
+              "https://static.vecteezy.com/system/resources/previews/021/548/095/non_2x/default-profile-picture-avatar-user-avatar-icon-person-icon-head-icon-profile-picture-icons-default-anonymous-user-male-and-female-businessman-photo-placeholder-social-network-avatar-portrait-free-vector.jpg"
+            }
             alt="Profile"
             width={40}
             height={40}

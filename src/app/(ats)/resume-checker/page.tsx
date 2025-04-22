@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
+import FileUpload from "@/components/ats-checker/file-upload";
 
 export default function ATSChecker() {
   return (
@@ -56,21 +57,7 @@ export default function ATSChecker() {
                 </p>
               </div>
 
-              <div className="border border-gray-200 rounded-lg p-6 space-y-4">
-                <div className="text-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                  <p className="text-gray-700 mb-1">Drop your resume here</p>
-                  <p className="text-sm text-gray-500">
-                    or choose a file. PDF & DOCX only. Max 2MB file size.
-                  </p>
-                </div>
-                <Button className="w-full bg-primary hover:bg-primary/90">
-                  Upload Resume
-                </Button>
-                <div className="flex items-center justify-center text-sm text-gray-500">
-                  <Lock className="h-4 w-4 mr-2" />
-                  <span>Privacy guaranteed</span>
-                </div>
-              </div>
+              <FileUpload />
             </div>
 
             {/* Right Column - Treated as an image for responsive design */}
@@ -81,8 +68,8 @@ export default function ATSChecker() {
                   alt="Resume analysis showing a 45/100 score with ATS parse rate and content analysis"
                   width={600}
                   height={700}
-                  className="w-full h-auto object-fill"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
+                  className="w-full h-auto object-contain"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                   priority
                 />
               </div>

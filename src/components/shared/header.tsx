@@ -13,6 +13,7 @@ interface HeaderProps {
   onButtonClick?: any;
   showDevelop?: boolean;
   children?: React.ReactNode;
+  onBuiltResumeButtonClick?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -22,9 +23,9 @@ const Header: React.FC<HeaderProps> = ({
   buttonIconPath,
   onButtonClick,
   showDevelop = false,
+  onBuiltResumeButtonClick,
   children,
 }) => {
-  const router = useRouter();
   return (
     <div className="flex flex-col my-2">
       <div className="flex flex-col sm:flex-row sm:justify-between space-y-5 sm:items-center py-4">
@@ -38,7 +39,9 @@ const Header: React.FC<HeaderProps> = ({
           {showDevelop && (
             <Button
               className="bg-[#E6ECF8] hover:bg-[#E6ECF8]/90 w-full sm:w-auto text-primary text-[16px] font-[500] py-7 px-5 rounded-[8px] flex items-center gap-2"
-              onClick={() => router.push("/build-resume/choose-template")}
+              onClick={() => {
+                if (onBuiltResumeButtonClick) onBuiltResumeButtonClick();
+              }}
             >
               <span>Build Resume</span>
               <FilePlus className="text-primary" size={24} />

@@ -59,7 +59,7 @@ export const createBuiltResume = async ({
   active?: boolean;
 }) => {
   try {
-    console.log(title, userId, templateType, data, active);
+    console.log("DATA", userId, title);
     const { data: resume, errors } = await client.models.Resume.create({
       title,
       userId,
@@ -69,6 +69,8 @@ export const createBuiltResume = async ({
       templateType,
       data: JSON.stringify(data), // Store the complete resume data structure
     });
+
+    console.log("RESUME", resume);
 
     if (errors) {
       throw new Error(errors[0].message);

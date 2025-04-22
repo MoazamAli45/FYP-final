@@ -57,8 +57,8 @@ const StatsPage: React.FC<{ linkTitle: any; id: any }> = ({
     linkInfo?.sessions
   );
   const [date, setDate] = React.useState<DateRange | undefined>({
-    from: new Date(2024, 6, 20),
-    to: addDays(new Date(2024, 6, 20), 20),
+    from: addDays(new Date(), -365), // One year ago from today
+    to: new Date(),
   });
   const [showUpgradeModal, setShowUpgradeModal] = useState<boolean>(false);
 

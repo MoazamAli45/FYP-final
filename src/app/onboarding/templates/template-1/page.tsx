@@ -52,8 +52,12 @@ function Template1Page() {
   ); // Conditional initial state
   const [isSaving, setIsSaving] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
-  const user = useAuthUser();
 
+  const user = useAuthUser();
+  console.log("user", user);
+  const CREDITS = Number(user?.["custom:credits"] ?? 0);
+
+  const [localCredits, setLocalCredits] = useState(CREDITS);
   // preview related states
   const [showPreview, setShowPreview] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -63,6 +67,10 @@ function Template1Page() {
     documentTitle: resumeTitle || "Resume",
   });
 
+  // Sync localCredits with CREDITS whenever CREDITS changes
+  useEffect(() => {
+    setLocalCredits(CREDITS);
+  }, [CREDITS]);
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedId = localStorage.getItem("id");
@@ -185,7 +193,7 @@ function Template1Page() {
         showPreview == true ? `h-screen overflow-hidden` : `min-h-screen`
       } bg-gray-50 relative`}
     >
-      <EditLayout />
+      <EditLayout localCredits={localCredits} />
 
       <div className="flex items-center justify-between px-2 gap-2   w-full max-w-[850px] mx-auto sm:px-4 pt-6">
         <Label htmlFor="resume-title" className="sr-only">
@@ -306,6 +314,8 @@ function Template1Page() {
             onSuccessfulEdit={saveResumeData}
             resumeId={resumeId}
             key={resumeId || "new-resume"}
+            localCredits={localCredits}
+            setLocalCredits={setLocalCredits}
           />
         ) : (
           <div className="flex items-center h-[60vh] justify-center  w-full">

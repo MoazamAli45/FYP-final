@@ -48,12 +48,16 @@ function ResumePage() {
 
   const [resumeTitle, setResumeTitle] = useState("My Professional Resume");
 
+  const user = useAuthUser();
+  const CREDITS = Number(user?.["custom:credits"] ?? 0);
+
+  const [localCredits, setLocalCredits] = useState(CREDITS);
+
   const [resumeData, setResumeData] = useState<any>(
     resumeId ? null : initialData
   ); // Conditional initial state
   const [isSaving, setIsSaving] = useState(false);
   const [userId, setUserId] = useState<string | undefined>();
-  const user = useAuthUser();
 
   // resume preview state and download function
   const [showPreview, setShowPreview] = useState(false);
@@ -75,6 +79,10 @@ function ResumePage() {
     }
   }, [user]);
 
+  // Sync localCredits with CREDITS whenever CREDITS changes
+  useEffect(() => {
+    setLocalCredits(CREDITS);
+  }, [CREDITS]);
   const updateUrlWithResumeId = useCallback(
     (id: string) => {
       const url = new URL(window.location.href);
@@ -172,7 +180,7 @@ function ResumePage() {
         showPreview == true ? `h-screen overflow-hidden` : `min-h-screen`
       } bg-gray-50 relative`}
     >
-      <EditLayout showBackButton={false} />
+      <EditLayout showBackButton={false} localCredits={localCredits} />
       <div className="flex items-center justify-between px-2 gap-2 w-full max-w-[850px] mx-auto sm:px-4 pt-6">
         <Label htmlFor="resume-title" className="sr-only">
           Resume Title
@@ -292,6 +300,8 @@ function ResumePage() {
             onSuccessfulEdit={saveResumeData}
             resumeId={resumeId}
             key={resumeId || "new-resume"}
+            localCredits={localCredits}
+            setLocalCredits={setLocalCredits}
           />
         ) : (
           <div className="flex items-center h-[60vh] justify-center w-full">

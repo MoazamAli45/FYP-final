@@ -57,6 +57,12 @@ function EditPage() {
   const [showPreview, setShowPreview] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  const user = useAuthUser();
+
+  const CREDITS = Number(user?.["custom:credits"] ?? 0);
+
+  const [localCredits, setLocalCredits] = useState(CREDITS);
+
   const reactToPrintFn = useReactToPrint({
     contentRef,
     documentTitle: resumeTitle || "Resume",
@@ -71,6 +77,10 @@ function EditPage() {
     [router]
   );
 
+  // Sync localCredits with CREDITS whenever CREDITS changes
+  useEffect(() => {
+    setLocalCredits(CREDITS);
+  }, [CREDITS]);
   const handleDataChange = (data: any) => {
     setResumeData(data);
   };
@@ -159,7 +169,7 @@ function EditPage() {
         showPreview == true ? `h-screen overflow-hidden` : `min-h-screen`
       } bg-gray-50 relative`}
     >
-      <EditLayout showBackButton={false} />
+      <EditLayout showBackButton={false} localCredits={localCredits} />
 
       <div className="flex items-center justify-between px-2 gap-2   w-full max-w-[850px] mx-auto sm:px-4 pt-6">
         <Label htmlFor="resume-title" className="sr-only">
@@ -280,6 +290,8 @@ function EditPage() {
             onSuccessfulEdit={saveResumeData}
             resumeId={resumeId}
             key={resumeId || "new-resume"}
+            localCredits={localCredits}
+            setLocalCredits={setLocalCredits}
           />
         ) : (
           <div className="flex items-center h-[60vh] justify-center  w-full">

@@ -13,7 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-import { BrainCircuit } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import {
   DndContext,
   closestCenter,
@@ -47,6 +47,10 @@ import type {
   CustomSectionItem,
 } from "./data";
 import AiModal from "../ai-modal";
+import useAuthUser from "@/hooks/use-auth-user";
+import UpgradeModal from "@/components/shared/upgrade-plan-modal";
+import { handleUpdateCredits } from "@/lib/cognitoActions";
+import { AI_GENERATION_CREDITS_SUBTRACTED } from "@/constants/constants";
 
 // Validation constants
 const MAX_POINTS = 5;
@@ -101,14 +105,6 @@ const AI_QUESTIONS = {
     { text: "Who issued each certification, and when did you receive it?" },
     {
       text: "Can you provide a brief description of what each certification entails?",
-    },
-  ],
-  customSections: [
-    {
-      text: "Do you have any additional sections you would like to include in your resume, such as extracurricular activities, publications, or volunteer work?",
-    },
-    {
-      text: "For each custom section, what is the title, and what are the key points or items you want to include?",
     },
   ],
 };
@@ -348,6 +344,8 @@ interface EditResumeProps {
   initialResumeData: ResumeData;
   onSuccessfulEdit?: (autoSave: boolean) => Promise<any>;
   resumeId?: string | null;
+  localCredits: number;
+  setLocalCredits: (credits: number) => void;
 }
 
 export default function EditResume({
@@ -355,6 +353,8 @@ export default function EditResume({
   initialResumeData,
   onSuccessfulEdit,
   resumeId,
+  localCredits,
+  setLocalCredits,
 }: EditResumeProps) {
   // Initialize data with initialResumeData or fallback to initialData, only once on mount
   const [data, setData] = useState<ResumeData>(initialResumeData);
@@ -381,8 +381,12 @@ export default function EditResume({
   const [aiModalSectionId, setAiModalSectionId] = useState<string | null>(null);
   const [aiModalItemId, setAiModalItemId] = useState<string | null>(null);
 
+  const [showModalButtonText, setShowModalButtonText] = useState("Continue");
+
   // Debounced auto-save
   const [pendingSave, setPendingSave] = useState(false);
+
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Notify parent component when data changes
   useEffect(() => {
@@ -457,10 +461,16 @@ export default function EditResume({
     itemId: string | null = null,
     sectionId: string | null = null
   ) => {
-    setAiModalSection(section);
-    setAiModalItemId(itemId);
-    setAiModalSectionId(sectionId);
-    setAiModalOpen(true);
+    if (localCredits > 0) {
+      // Proceed with opening the AI modal
+      setAiModalSection(section);
+      setAiModalItemId(itemId);
+      setAiModalSectionId(sectionId);
+      setAiModalOpen(true);
+    } else {
+      // Show upgrade modal or prompt to buy credits
+      setShowUpgradeModal(true);
+    }
   };
 
   const handleCloseAiModal = () => {
@@ -468,21 +478,18 @@ export default function EditResume({
   };
 
   //       AI Processing Logic
-
-  const handleAiContinue = (answers: Record<string, string>) => {
-    // Here you would implement the AI processing logic
-    // For now, we'll just show a toast with the answers
-    toast.success("AI suggestions received! Implementing changes...");
+  const handleAiContinue = async (answers: Record<string, string>) => {
+    setShowModalButtonText("Generating...");
 
     // Close the modal
-    setAiModalOpen(false);
 
-    // You would process the answers and update the resume data here
+    // Prepare the request body for the API
     const requestBody = {
       sectionName: aiModalSection,
       questionAnswers: answers,
     };
-    console.log(requestBody);
+
+    //  FLASK AI API------------------------------->
     const API_URL =
       "https://flask-text-generation.vercel.app/generate_resume_section";
 
@@ -499,11 +506,227 @@ export default function EditResume({
         }
         return response.json();
       })
-      .then((data) => {
-        console.log("Generated Resume Section:", data);
+      .then((responseData) => {
+        const parsedData = responseData.sectionData[0];
+        const parsedDataCertificate = responseData.sectionData;
+
+        // Update state based on section type
+        setData((prev) => {
+          switch (aiModalSection) {
+            case "education": {
+              const newEducation: Education = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                institution: parsedData?.institution || "",
+                location: parsedData?.location || "",
+                degree: parsedData?.degree || "",
+                gpa: parsedData?.gpa || "",
+                startDate: parsedData?.startDate || "",
+                endDate: parsedData?.endDate || "",
+              };
+
+              if (aiModalItemId) {
+                // Update existing education entry
+                return {
+                  ...prev,
+                  education: prev.education.map((edu) => {
+                    console.log("AI ID", aiModalItemId, edu.id);
+                    return edu.id === aiModalItemId ? newEducation : edu;
+                  }),
+                };
+              } else {
+                // Add new education entry
+                return {
+                  ...prev,
+                  education: [...prev.education, newEducation],
+                };
+              }
+            }
+
+            case "experience": {
+              const newExperience: Experience = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                title: parsedData?.title || "",
+                company: parsedData?.company || "",
+                link: {
+                  text: parsedData?.link?.text || "",
+                  url: parsedData?.link?.url || "",
+                },
+                startDate: parsedData?.startDate || "",
+                endDate: parsedData?.endDate || "",
+                points: parsedData?.points || [""],
+              };
+
+              if (aiModalItemId) {
+                // Update existing experience entry
+                return {
+                  ...prev,
+                  experience: prev.experience.map((exp) =>
+                    exp.id === aiModalItemId ? newExperience : exp
+                  ),
+                };
+              } else {
+                // Add new experience entry
+                return {
+                  ...prev,
+                  experience: [...prev.experience, newExperience],
+                };
+              }
+            }
+
+            case "projects": {
+              const newProject: Project = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                title: parsedData?.projectTitle || "",
+                link: {
+                  text: parsedData.link?.text || "",
+                  url: parsedData.link?.url || "",
+                },
+                startDate: parsedData?.startDate || "",
+                endDate: parsedData?.endDate || "",
+                points: parsedData?.description
+                  ? [parsedData.description]
+                  : [""],
+              };
+
+              if (aiModalItemId) {
+                // Update existing project entry
+                return {
+                  ...prev,
+                  projects: prev.projects.map((proj) =>
+                    proj.id === aiModalItemId ? newProject : proj
+                  ),
+                };
+              } else {
+                // Add new project entry
+                return {
+                  ...prev,
+                  projects: [...prev.projects, newProject],
+                };
+              }
+            }
+
+            case "certificates": {
+              const newCertificate: Certificate = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                name: parsedDataCertificate?.name || "",
+                link: {
+                  text: parsedDataCertificate?.link?.text || "",
+                  url: parsedDataCertificate?.link?.url || "",
+                },
+                date: parsedDataCertificate?.date || "",
+                description: parsedDataCertificate?.description || "",
+              };
+
+              if (aiModalItemId) {
+                // Update existing certificate entry
+
+                return {
+                  ...prev,
+                  certificates: prev?.certificates?.map((cert) =>
+                    cert.id === aiModalItemId ? newCertificate : cert
+                  ),
+                };
+              } else {
+                // Add new certificate entry
+                return {
+                  ...prev,
+                  certificates: [...prev?.certificates, newCertificate],
+                };
+              }
+            }
+
+            case "skills": {
+              // Assuming API returns { category: string, skills: string[] }
+              const category =
+                responseData.category?.toLowerCase() || "general";
+              const skills = responseData.skills || [];
+
+              if (!skills.length) {
+                toast.error("No skills provided by AI");
+                return prev;
+              }
+
+              const newSkills: Skills = {
+                ...prev.skills,
+                [category]: skills,
+              };
+
+              if (!validateSkills(newSkills)) {
+                toast.error("Invalid skills data received from AI");
+                return prev;
+              }
+
+              return {
+                ...prev,
+                skills: newSkills,
+              };
+            }
+
+            case "customSections": {
+              if (!aiModalSectionId) {
+                toast.error("No custom section ID provided");
+                return prev;
+              }
+
+              const newCustomItem: CustomSectionItem = {
+                id: aiModalItemId || Math.random().toString(36).substr(2, 9),
+                title: responseData.title || "",
+                content: responseData.content || "",
+              };
+
+              if (!validateCustomItem(newCustomItem)) {
+                toast.error(
+                  "Invalid custom section item data received from AI"
+                );
+                return prev;
+              }
+
+              return {
+                ...prev,
+                customSections: prev.customSections.map((cs) =>
+                  cs.id === aiModalSectionId
+                    ? {
+                        ...cs,
+                        items: aiModalItemId
+                          ? cs.items.map((item) =>
+                              item.id === aiModalItemId ? newCustomItem : item
+                            )
+                          : [...cs.items, newCustomItem],
+                      }
+                    : cs
+                ),
+              };
+            }
+
+            default:
+              toast.error("Unknown section type");
+              return prev;
+          }
+        });
+
+        // Subtract credits after content generation is successful
+        const updatedCredits = localCredits - AI_GENERATION_CREDITS_SUBTRACTED;
+        if (updatedCredits < 0) {
+          toast.error("Not enough credits to generate content");
+          return;
+        }
+        handleUpdateCredits(updatedCredits)
+          .then(() => {
+            setLocalCredits(updatedCredits);
+          })
+          .catch((error) => {
+            console.error("Error updating credits:", error);
+            toast.error("Failed to update credits after AI generation");
+          });
+
+        setAiModalOpen(false);
+        setShowModalButtonText("Continue");
       })
       .catch((error) => {
         console.error("Error:", error);
+        setShowModalButtonText("Continue");
+        setAiModalOpen(false);
+        toast.error(`Failed to process AI suggestions: ${error.message}`);
       });
   };
 
@@ -997,12 +1220,14 @@ export default function EditResume({
     sectionId: string | null = null
   ) => (
     <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-      <button
-        onClick={() => handleOpenAiModal(section, itemId, sectionId)}
-        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-      >
-        <BrainCircuit className="w-4 h-4 text-[#356CB5]" />
-      </button>
+      {section !== "customItem" && (
+        <button
+          onClick={() => handleOpenAiModal(section, itemId, sectionId)}
+          className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+        >
+          <Sparkles className="w-4 h-4 text-[#356CB5]" />
+        </button>
+      )}
       <button
         onClick={() => handleEdit(section, itemId, sectionId)}
         className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
@@ -1658,13 +1883,6 @@ export default function EditResume({
       {/* Personal Info Section */}
       <div className="group relative mb-8">
         <div className="absolute hidden group-hover:flex gap-2 -right-4 -top-2">
-          {/*                 <---------------PERSONAL INFO AI BUTTON-------------------->                       */}
-          <button
-            onClick={() => handleOpenAiModal("personalInfo")}
-            className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-          >
-            <BrainCircuit className="w-5 h-5 text-[#356CB5]" />
-          </button>
           <button
             onClick={() => {
               if (editingSection === "personalInfo") {
@@ -1823,6 +2041,8 @@ export default function EditResume({
         onClose={handleCloseAiModal}
         onContinue={handleAiContinue}
         sectionTitle={aiModalSection}
+        showModalButtonText={showModalButtonText}
+        credits={localCredits}
         questions={
           AI_QUESTIONS[aiModalSection as keyof typeof AI_QUESTIONS] || []
         }
@@ -1906,6 +2126,11 @@ export default function EditResume({
           <Loader2 className="h-4 w-4 animate-spin" />
           <span>Saving changes...</span>
         </div>
+      )}
+
+      {/*   FOR SHOWING UPGRADE MODAL */}
+      {showUpgradeModal && (
+        <UpgradeModal onClose={() => setShowUpgradeModal(false)} />
       )}
     </div>
   );

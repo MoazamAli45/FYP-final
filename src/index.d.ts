@@ -66,9 +66,10 @@ interface PlanCardProps {
   price: string;
   features: string[];
   className?: string;
-  standard?: boolean;
+  showBlueBg?: boolean;
   planName?: string;
   onClickButton?: () => void;
   Icon: string;
   key: string | number;
+  index: string | number;
 }

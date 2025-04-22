@@ -27,7 +27,6 @@ export default function RootLayout({
       <body
         className={cn("min-h-screen  antialiased", plusJakartaSans.className)}
       >
-        {/* <OnboardProvider> */}
         <ProgressBarProvider>
           {/* I.e. using Tailwind CSS to show the progress bar with custom styling */}
           <ProgressBar className="fixed h-1 shadow-lg shadow-primary/20 bg-primary top-0 z-[10000]" />
@@ -38,7 +37,6 @@ export default function RootLayout({
             </ResetProvider>
           </SignupProvider>
         </ProgressBarProvider>
-        {/* </OnboardProvider> */}
       </body>
     </html>
   );

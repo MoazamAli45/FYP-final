@@ -129,7 +129,7 @@ const ProfileSetup: React.FC = () => {
     try {
       setIsLoading(true);
 
-      const updated = await handleUpdateProfile(undefined, {
+      await handleUpdateProfile(undefined, {
         fullName: formState.fullName,
         profilePic:
           formState?.url ||
