@@ -132,6 +132,28 @@ const AI_QUESTIONS = {
       text: "Can you provide a brief description of what each certification entails?",
     },
   ],
+  summary: [
+    {
+      text: "How would you describe your overall professional profile in 2-3 sentences?",
+    },
+    {
+      text: "What makes you stand out from others in your field?",
+    },
+    {
+      text: "What are your long-term career goals or aspirations?",
+    },
+  ],
+  keyAchievements: [
+    {
+      text: "What are some of your most notable achievements in your career or academics?",
+    },
+    {
+      text: "Have you received any awards, recognitions, or titles worth highlighting?",
+    },
+    {
+      text: "Can you share specific results (e.g., metrics, impact) from your work that you're proud of?",
+    },
+  ],
 };
 
 // Validation functions
@@ -617,13 +639,17 @@ export default function EditResume({
 
     // Prepare the request body for the API
     const requestBody = {
-      sectionName: aiModalSection,
+      sectionName:
+        aiModalSection === "personalInfo"
+          ? "header"
+          : aiModalSection === "keyAchievements"
+          ? "achievements"
+          : aiModalSection,
       questionAnswers: answers,
     };
 
-    //  FLASK AI API------------------------------->
-    const API_URL =
-      "https://flask-text-generation.vercel.app/generate_resume_section";
+    //   AI API------------------------------->
+    const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/generate_resume_section`;
 
     fetch(API_URL, {
       method: "POST",
@@ -647,6 +673,20 @@ export default function EditResume({
         // Update state based on section type
         setData((prev) => {
           switch (aiModalSection) {
+            case "personalInfo": {
+              const newPersonalInfo = {
+                ...prev.personalInfo,
+                title:
+                  [
+                    parsedDataCertificate?.role,
+                    parsedDataCertificate?.education,
+                    parsedDataCertificate?.affiliation,
+                  ]
+                    .filter((attr) => attr && attr.trim())
+                    .join(" | ") || prev.personalInfo.title,
+              };
+              return { ...prev, personalInfo: newPersonalInfo };
+            }
             case "education": {
               const newEducation: Education = {
                 id: aiModalItemId || Math.random().toString(36).substr(2, 9),
@@ -658,7 +698,6 @@ export default function EditResume({
                 endDate: parsedData.endDate || "",
               };
 
-              console.log("AI ID", aiModalItemId);
               if (aiModalItemId) {
                 // Update existing education entry
                 return {
@@ -770,67 +809,39 @@ export default function EditResume({
               }
             }
 
-            case "skills": {
-              // Assuming API returns { category: string, skills: string[] }
-              const category =
-                responseData.category?.toLowerCase() || "general";
-              const skills = responseData.skills || [];
-
-              if (!skills.length) {
-                toast.error("No skills provided by AI");
-                return prev;
-              }
-
-              const newSkills: Skills = {
-                ...prev.skills,
-                [category]: skills,
-              };
-
-              if (!validateSkills(newSkills)) {
-                toast.error("Invalid skills data received from AI");
-                return prev;
-              }
-
-              return {
+            case "summary": {
+              const newSummary = {
                 ...prev,
-                skills: newSkills,
+                summary: parsedData.summary || "",
               };
+
+              return newSummary;
             }
-
-            case "customSections": {
-              if (!aiModalSectionId) {
-                toast.error("No custom section ID provided");
-                return prev;
-              }
-
-              const newCustomItem: CustomSectionItem = {
+            case "keyAchievements": {
+              const newKeyAchievement = {
                 id: aiModalItemId || Math.random().toString(36).substr(2, 9),
-                title: responseData.title || "",
-                content: responseData.content || "",
+                title: parsedData?.title || "",
+                description: parsedData?.description || "",
+                icon: parsedData?.icon || "heart",
               };
 
-              if (!validateCustomItem(newCustomItem)) {
-                toast.error(
-                  "Invalid custom section item data received from AI"
-                );
-                return prev;
+              if (aiModalItemId) {
+                // Update existing key achievement entry
+                return {
+                  ...prev,
+                  keyAchievements: prev.keyAchievements.map((achievement) =>
+                    achievement.id === aiModalItemId
+                      ? newKeyAchievement
+                      : achievement
+                  ),
+                };
+              } else {
+                // Add new key achievement entry
+                return {
+                  ...prev,
+                  keyAchievements: [...prev.keyAchievements, newKeyAchievement],
+                };
               }
-
-              return {
-                ...prev,
-                customSections: prev.customSections.map((cs) =>
-                  cs.id === aiModalSectionId
-                    ? {
-                        ...cs,
-                        items: aiModalItemId
-                          ? cs.items.map((item) =>
-                              item.id === aiModalItemId ? newCustomItem : item
-                            )
-                          : [...cs.items, newCustomItem],
-                      }
-                    : cs
-                ),
-              };
             }
 
             default:
@@ -1384,7 +1395,8 @@ export default function EditResume({
   const addAiButtonToItemControls = (
     section: string,
     itemId: string,
-    sectionId: string | null = null
+    sectionId: string | null = null,
+    showDelete: boolean = true
   ) => (
     <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
       {section !== "customItem" && (
@@ -1395,18 +1407,21 @@ export default function EditResume({
           <Sparkles className="w-4 h-4 text-[#356CB5]" />
         </button>
       )}
+
       <button
         onClick={() => handleEdit(section, itemId, sectionId)}
         className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
       >
         <Edit2 className="w-4 h-4 text-gray-600" />
       </button>
-      <button
-        onClick={() => handleDelete(section, itemId, sectionId)}
-        className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-      >
-        <Trash2 className="w-4 h-4 text-red-600" />
-      </button>
+      {showDelete && (
+        <button
+          onClick={() => handleDelete(section, itemId, sectionId)}
+          className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+        >
+          <Trash2 className="w-4 h-4 text-red-600" />
+        </button>
+      )}
     </div>
   );
 
@@ -1748,12 +1763,7 @@ export default function EditResume({
             ) : (
               <div className="group/item relative hover-border-resume p-2">
                 <p className="text-sm text-gray-700">{data.summary}</p>
-                <button
-                  onClick={() => handleEdit("summary")}
-                  className="absolute top-0 right-0 p-2 hover:bg-gray-100 rounded opacity-0 group-hover:opacity-100"
-                >
-                  <Edit2 className="w-4 h-4 text-gray-600" />
-                </button>
+                {addAiButtonToItemControls("summary", "", null, false)}
               </div>
             )}
           </div>
@@ -1766,24 +1776,7 @@ export default function EditResume({
                 key={achievement.id}
                 className="group/item relative p-2 rounded-md transition-all duration-200 border-2 border-transparent hover:border-primary mb-3"
               >
-                <div className="absolute hidden group-hover/item:flex gap-2 -right-4 top-0">
-                  <button
-                    onClick={() =>
-                      handleEdit("keyAchievements", achievement.id)
-                    }
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Edit2 className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleDelete("keyAchievements", achievement.id)
-                    }
-                    className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-600" />
-                  </button>
-                </div>
+                {addAiButtonToItemControls("keyAchievements", achievement.id)}
                 {editingSection === "keyAchievements" &&
                 editingId === achievement.id ? (
                   <div className="space-y-2">
@@ -2319,6 +2312,12 @@ export default function EditResume({
         {/* Personal Info Section */}
         <div className="group relative mb-6">
           <div className="absolute hidden group-hover:flex gap-2 -right-4 -top-2">
+            <button
+              onClick={() => handleOpenAiModal("personalInfo", " ")}
+              className="p-2 bg-white rounded-md shadow hover:bg-gray-50 transition-colors duration-200"
+            >
+              <Sparkles className="w-4 h-4 text-[#356CB5]" />
+            </button>
             <button
               onClick={() => {
                 if (editingSection === "personalInfo") {

@@ -146,9 +146,11 @@ const UploadResume: React.FC<{ user: any }> = ({ user }) => {
           <span className="ml-2">back</span>
         </button>
         <button
-          onClick={async () => {
-            await handleUpdateOnboarding();
-            router?.push("/overview");
+          onClick={() => {
+            handleUpdateOnboarding().then(() => {
+              toast.success("Onboarding skipped successfully");
+              router?.push("/overview");
+            });
           }}
           className="text-[#344054] font-[500] pt-[4rem] uppercase"
         >

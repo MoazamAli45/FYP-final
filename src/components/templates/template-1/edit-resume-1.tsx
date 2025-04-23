@@ -489,9 +489,9 @@ export default function EditResume({
       questionAnswers: answers,
     };
 
-    //  FLASK AI API------------------------------->
-    const API_URL =
-      "https://flask-text-generation.vercel.app/generate_resume_section";
+    //   AI API------------------------------->
+
+    const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/generate_resume_section`;
 
     fetch(API_URL, {
       method: "POST",

@@ -291,15 +291,15 @@ export default function EditResume({
 
     // Prepare the request body for the API
     const requestBody = {
-      sectionName: aiModalSection,
+      sectionName:
+        aiModalSection === "personalInfo" ? "header" : aiModalSection,
       questionAnswers: answers,
     };
 
-    console.log("Request Body:", requestBody);
+    console.log("AI Request Body:", JSON.stringify(requestBody));
 
-    //  FLASK AI API------------------------------->
-    const API_URL =
-      "https://flask-text-generation.vercel.app/generate_resume_section";
+    //   AI API------------------------------->
+    const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/generate_resume_section`;
 
     fetch(API_URL, {
       method: "POST",
@@ -326,7 +326,14 @@ export default function EditResume({
             case "personalInfo": {
               const newPersonalInfo = {
                 ...prev.personalInfo,
-                title: parsedData.title || prev.personalInfo.title,
+                title:
+                  [
+                    parsedDataCertificate?.role,
+                    parsedDataCertificate?.education,
+                    parsedDataCertificate?.affiliation,
+                  ]
+                    .filter((attr) => attr && attr.trim())
+                    .join(" | ") || prev.personalInfo.title,
               };
               return { ...prev, personalInfo: newPersonalInfo };
             }

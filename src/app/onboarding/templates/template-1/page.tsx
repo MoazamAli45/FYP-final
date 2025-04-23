@@ -151,7 +151,7 @@ function Template1Page() {
   );
 
   const handleSaveResume = async () => {
-    await saveResumeData(false);
+    await saveResumeData(true);
   };
 
   useEffect(() => {

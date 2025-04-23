@@ -120,7 +120,7 @@ export default function FileUpload() {
       }, 3000);
 
       const response = await fetch(
-        "https://ats-ai-api.onrender.com/analyze/ats-only",
+        `${process.env.NEXT_PUBLIC_API_URL}/analyze/ats-only`,
         {
           method: "POST",
           body: formData,

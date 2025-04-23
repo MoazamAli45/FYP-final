@@ -83,7 +83,6 @@ function Template1Page() {
     }
   }, [user]);
 
-
   const updateUrlWithResumeId = useCallback(
     (id: string) => {
       const url = new URL(window.location.href);
@@ -153,7 +152,7 @@ function Template1Page() {
   );
 
   const handleSaveResume = async () => {
-    await saveResumeData(false);
+    await saveResumeData(true);
   };
 
   useEffect(() => {
