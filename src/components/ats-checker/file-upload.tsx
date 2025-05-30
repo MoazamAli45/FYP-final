@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import type React from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, Lock, FileText, CheckCircle } from "lucide-react";
@@ -25,6 +26,10 @@ export default function FileUpload() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [analysisStage, setAnalysisStage] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
+
+  // Job description state
+  const [showJobDescription, setShowJobDescription] = useState(false);
+  const [jobDescription, setJobDescription] = useState("");
 
   const validateFile = (file: File) => {
     if (!ACCEPTED_FILE_TYPES.includes(file.type)) {
@@ -81,9 +86,49 @@ export default function FileUpload() {
     }
   };
 
+  // Function to run the step animation regardless of API speed
+  const runStepByStepAnimation = () => {
+    // Step 1 - after 1.5s
+    setTimeout(() => setCurrentStep(1), 1500);
+
+    // Step 2 - after 3s
+    setTimeout(() => setCurrentStep(2), 3000);
+
+    // Step 3 - after 4.5s
+    setTimeout(() => setCurrentStep(3), 4500);
+  };
+
+  // Function to ensure animation completes before proceeding
+  const ensureAnimationComplete = async () => {
+    return new Promise((resolve) => {
+      const checkComplete = () => {
+        if (currentStep >= 3) {
+          resolve(true);
+        } else {
+          // Check again in 500ms
+          setTimeout(checkComplete, 500);
+        }
+      };
+
+      // Wait minimum 5s for animation to look natural
+      setTimeout(() => {
+        checkComplete();
+      }, 5000);
+    });
+  };
+
   const analyzeResume = async () => {
     if (!file) {
       toast.error("Please select a file first.");
+      return;
+    }
+
+    // Validate job description if option is selected
+    if (
+      showJobDescription &&
+      (!jobDescription || jobDescription.trim() === "")
+    ) {
+      toast.error("Please enter a job description.");
       return;
     }
 
@@ -93,6 +138,11 @@ export default function FileUpload() {
     // Create form data for API request
     const formData = new FormData();
     formData.append("resume_file", file);
+
+    // Add job description if available
+    if (showJobDescription && jobDescription) {
+      formData.append("job_description", jobDescription);
+    }
 
     try {
       // Initialize loading states
@@ -119,13 +169,16 @@ export default function FileUpload() {
         runStepByStepAnimation();
       }, 3000);
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/analyze/ats-only`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      // Use job matching API if job description is provided, otherwise use ATS-only API
+      const apiEndpoint =
+        showJobDescription && jobDescription
+          ? `${process.env.NEXT_PUBLIC_API_URL}/analyze/job-matching`
+          : `${process.env.NEXT_PUBLIC_API_URL}/analyze/ats-only`;
+
+      const response = await fetch(apiEndpoint, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
@@ -161,37 +214,6 @@ export default function FileUpload() {
       setAnalysisStage(null);
       setCurrentStep(0);
     }
-  };
-
-  // Function to run the step animation regardless of API speed
-  const runStepByStepAnimation = () => {
-    // Step 1 - after 1.5s
-    setTimeout(() => setCurrentStep(1), 1500);
-
-    // Step 2 - after 3s
-    setTimeout(() => setCurrentStep(2), 3000);
-
-    // Step 3 - after 4.5s
-    setTimeout(() => setCurrentStep(3), 4500);
-  };
-
-  // Function to ensure animation completes before proceeding
-  const ensureAnimationComplete = async () => {
-    return new Promise((resolve) => {
-      const checkComplete = () => {
-        if (currentStep >= 3) {
-          resolve(true);
-        } else {
-          // Check again in 500ms
-          setTimeout(checkComplete, 500);
-        }
-      };
-
-      // Wait minimum 5s for animation to look natural
-      setTimeout(() => {
-        checkComplete();
-      }, 5000);
-    });
   };
 
   const removeFile = () => {
@@ -239,7 +261,10 @@ export default function FileUpload() {
                     <motion.div
                       className="absolute -top-1 -right-1"
                       animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
+                      transition={{
+                        repeat: Number.POSITIVE_INFINITY,
+                        duration: 1.5,
+                      }}
                     >
                       <div className="h-5 w-5 bg-green-500 rounded-full flex items-center justify-center">
                         <CheckCircle className="h-3 w-3 text-white" />
@@ -396,7 +421,7 @@ export default function FileUpload() {
                     initial={{ opacity: 0.7 }}
                     animate={{ opacity: 1 }}
                     transition={{
-                      repeat: Infinity,
+                      repeat: Number.POSITIVE_INFINITY,
                       duration: 1.5,
                       repeatType: "reverse",
                     }}
@@ -482,6 +507,63 @@ export default function FileUpload() {
           accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
           onChange={handleFileInput}
         />
+
+        {/* Job Description Toggle Section */}
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <div className="flex items-center mb-3">
+            <button
+              type="button"
+              onClick={() => setShowJobDescription(!showJobDescription)}
+              className="flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <div
+                className={`w-4 h-4 mr-2 border rounded flex items-center justify-center ${
+                  showJobDescription
+                    ? "bg-blue-600 border-blue-600"
+                    : "border-gray-400"
+                }`}
+              >
+                {showJobDescription && (
+                  <CheckCircle className="h-3 w-3 text-white" />
+                )}
+              </div>
+              Include job description for better matching
+            </button>
+          </div>
+
+          {showJobDescription && (
+            <div
+              className="space-y-3"
+              style={{
+                animation: "fadeIn 0.3s ease-out forwards",
+              }}
+            >
+              <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
+                <p className="text-sm text-blue-800">
+                  Adding a job description helps our AI match your resume to
+                  specific job requirements, giving you more targeted feedback.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="jobDescription"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Paste job description
+                </label>
+                <textarea
+                  id="jobDescription"
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Paste the job description here..."
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="mt-4">
           <Button
