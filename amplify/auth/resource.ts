@@ -34,14 +34,9 @@ export const auth = defineAuth({
       // },
       callbackUrls: [
         "http://localhost:3000/social-signin",
-        "https://app.rezlinks.com/social-signin",
         "https://rezlinks.com/social-signin",
       ],
-      logoutUrls: [
-        "http://localhost:3000/login",
-        "https://app.rezlinks.com/login",
-        "https://rezlinks.com/login",
-      ],
+      logoutUrls: ["http://localhost:3000/login", "https://rezlinks.com/login"],
     },
   },
   userAttributes: {
