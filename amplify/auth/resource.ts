@@ -8,38 +8,41 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
     //   ------------------------TBD-----------------------
-    // externalProviders: {
-    //   google: {
-    //     clientId: secret('GOOGLE_CLIENT_ID'),
-    //     clientSecret: secret('GOOGLE_CLIENT_SECRET'),
+    externalProviders: {
+      google: {
+        clientId: secret("GOOGLE_CLIENT_ID"),
+        clientSecret: secret("GOOGLE_CLIENT_SECRET"),
 
-    //     scopes: ["email", "profile", "openid"],
+        scopes: ["email", "profile", "openid"],
 
-    //     attributeMapping: {
-    //       email: 'email',
-    //       givenName: 'given_name',
-    //       profilePicture: 'picture',
-    //     }
+        attributeMapping: {
+          email: "email",
+          givenName: "given_name",
+          profilePicture: "picture",
+        },
+      },
+      // facebook: {
+      //   clientId: secret('FACEBOOK_CLIENT_ID'),
+      //   clientSecret: secret('FACEBOOK_CLIENT_SECRET'),
 
-    //   },
-    //   facebook: {
-    //     clientId: secret('FACEBOOK_CLIENT_ID'),
-    //     clientSecret: secret('FACEBOOK_CLIENT_SECRET'),
+      //   scopes: [ "profile", "openid"],
 
-    //     scopes: [ "profile", "openid"],
-
-    //     attributeMapping: {
-    //       //email: 'email',
-    //       givenName: 'given_name'
-    //     }
-    //   },
-    //   callbackUrls: [
-    //     'http://localhost:3000/social-signin',
-    //     'https://app.rezlinks.com/social-signin',
-    //     'https://development.d3j7zyhhcn7zu8.amplifyapp.com/social-signin'
-    //   ],
-    //   logoutUrls: ['http://localhost:3000/login','https://app.rezlinks.com/login','https://development.d3j7zyhhcn7zu8.amplifyapp.com/login'],
-    // }
+      //   attributeMapping: {
+      //     //email: 'email',
+      //     givenName: 'given_name'
+      //   }
+      // },
+      callbackUrls: [
+        "http://localhost:3000/social-signin",
+        "https://app.rezlinks.com/social-signin",
+        "https://rezlinks.com/social-signin",
+      ],
+      logoutUrls: [
+        "http://localhost:3000/login",
+        "https://app.rezlinks.com/login",
+        "https://rezlinks.com/login",
+      ],
+    },
   },
   userAttributes: {
     fullname: {

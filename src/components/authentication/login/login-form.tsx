@@ -77,10 +77,7 @@ const LoginForm = () => {
 
   const handleSignInWithGoogle = async () => {
     try {
-      const toastId = toast.loading("Signing in with Google");
-      await signInWithRedirect({ provider: "Google" , options :{}});
-      toast.dismiss(toastId); // Dismiss the toast manually
-      
+      await signInWithRedirect({ provider: "Google", options: {} });
     } catch (error) {
       console.error(error);
     }
@@ -88,7 +85,6 @@ const LoginForm = () => {
 
   const handleSignInWithFacebook = async () => {
     try {
-      toast.loading("Signing in with Facebook");
       await signInWithRedirect({ provider: "Facebook", options: {} });
     } catch (error) {
       console.error(error);
@@ -122,7 +118,7 @@ const LoginForm = () => {
             />
             Sign in with Google
           </Button>
-          <Button
+          {/* <Button
             variant={"outline"}
             size={"default"}
             className="flex gap-[6px] items-center"
@@ -135,7 +131,7 @@ const LoginForm = () => {
               height={"20"}
             />
             Sign in with Faceboook
-          </Button>
+          </Button> */}
         </div>
         <div className="grid grid-cols-7 gap-1 place items-center">
           <span className="bg-[#EAECF0] h-[1px] col-span-3"></span>

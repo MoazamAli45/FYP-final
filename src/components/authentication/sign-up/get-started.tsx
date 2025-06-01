@@ -38,7 +38,6 @@ function GetStarted() {
 
   const handleSignInWithGoogle = async () => {
     try {
-      toast.loading("Signing in with Google");
       await signInWithRedirect({ provider: "Google" });
     } catch (error) {
       console.error(error);
@@ -72,7 +71,7 @@ function GetStarted() {
             />
             Sign up with Google
           </Button>
-          <Button
+          {/* <Button
             variant={"outline"}
             size={"default"}
             className="flex gap-[6px] items-center"
@@ -84,7 +83,7 @@ function GetStarted() {
               height={"20"}
             />
             Sign up with Faceboook
-          </Button>
+          </Button> */}
         </div>
         <div className="grid grid-cols-7 gap-1 place items-center">
           <span className="bg-[#EAECF0] h-[1px] col-span-3"></span>
