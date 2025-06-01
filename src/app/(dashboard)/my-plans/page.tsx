@@ -15,7 +15,7 @@ const Page = () => {
       showBlueBg: false,
       Icon: "/assets/dashboard/free.svg",
       features: [
-        "2 Resumes",
+        "3 Resumes",
         "5 links per resume",
         "3 sessions' stats per link",
       ],

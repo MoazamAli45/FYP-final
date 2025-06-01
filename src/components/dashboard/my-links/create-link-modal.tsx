@@ -209,7 +209,7 @@ function CreateLinkModal({ linkData, onClose }: CreateLinkModalProps) {
                 </label>
                 <Input
                   type="text"
-                  placeholder="MRS Technologies Internship 2024"
+                  placeholder="Link title"
                   value={linkTitle}
                   onChange={(e) => {
                     setLinkTitle(e.target.value);

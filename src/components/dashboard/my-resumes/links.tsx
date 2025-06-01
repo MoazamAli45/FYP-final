@@ -38,7 +38,7 @@ const Links: React.FC<LinksProps> = ({
         </label>
         <Input
           type="text"
-          placeholder="MRS Technologies Internship 2024"
+          placeholder="Link title"
           value={linkTitle}
           className={`text-[#344054] font-[500] bg-white text-[16px] `}
           disabled

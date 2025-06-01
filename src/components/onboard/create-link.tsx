@@ -224,7 +224,7 @@ const CreatePublicLink: React.FC<{ resume: any }> = ({ resume }) => {
             </label>
             <Input
               type="text"
-              placeholder="MRS Technologies Internship 2024"
+              placeholder="Link title"
               value={linkTitle}
               onChange={(e) => {
                 setLinkTitle(e.target.value);
